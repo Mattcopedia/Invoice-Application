@@ -1,6 +1,6 @@
 apply plugin: "com.android.application"
-apply plugin: "com.facebook.react"
-
+ apply plugin: "com.facebook.react"
+ 
 import com.android.build.OutputFile
 
 /**
@@ -89,19 +89,22 @@ def reactNativeArchitectures() {
 }
 
 android {
+    compileSdkVersion 33 //added one new line 
     ndkVersion rootProject.ext.ndkVersion
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     namespace "com.projectname"
     defaultConfig {
-        applicationId "com.projectname"
+        compileSdk 33
+        applicationId "com.projectname"  
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        vectorDrawables.useSupportLibrary = true 
     }
-
+ 
     splits {
         abi {
             reset()
@@ -112,10 +115,10 @@ android {
     }
     signingConfigs {
         debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+            storeFile file('debug.keystore1')
+            storePassword 'android1'
+            keyAlias 'androiddebugkey1' 
+            keyPassword 'android1'
         }
     }
     buildTypes {
@@ -145,13 +148,25 @@ android {
             }
 
         }
-    }
-}
+    } 
+
+    // apply from: file"../../node_modules/react-native-ckeditor/scripts/ckeditor.gradle" 
+ 
+    applicationVariants.all { variant ->
+        variant.assemble.doLast {
+            println "APK generation is disabled for ${variant.name}."
+        }
+    } 
+} 
+
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-
+    implementation 'com.facebook.android:facebook-android-sdk:latest.release'
+    
+      implementation project(':react-native-fbsdk-next')  
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
@@ -168,3 +183,5 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle") 
+apply plugin: 'com.google.gms.google-services'
