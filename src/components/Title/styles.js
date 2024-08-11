@@ -6,14 +6,17 @@ const styles = StyleSheet.create({
     color: colors.black,
     fontSize: 28,
     fontWeight: 'bold',
-    paddingVertical: 24,
+    paddingBottom: 5
   },
   thin: {
     fontSize: 24,
     fontWeight: '300',
     color: colors.purple,
-    paddingHorizontal: 24,
+    paddingHorizontal: 24, 
   },
+  upward: {
+   marginBottom: 10,
+  } 
 });
 
 export default styles;

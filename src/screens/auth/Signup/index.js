@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
- 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '../../../components/Button';
 import Checkbox from '../../../components/Checkbox';
 import Input from '../../../components/Input';
@@ -37,6 +37,8 @@ const Signup = ({navigation}) => {
       [key]: value,
     }));
   };
+
+
 
   const onSubmit = () => {
     if (!values.first_name || !values.last_name) {
@@ -71,11 +73,14 @@ const Signup = ({navigation}) => {
         console.error(error);
       });
       // navigation.navigate('Home')  
+
+      
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={styles.space}></View>
         <Title>Join the ride!</Title> 
 
         <Input

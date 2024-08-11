@@ -3,7 +3,7 @@ import colors from '../../constants/colors';
 
 const styles = StyleSheet.create({
     title: {
-    fontSize: 21,
+    fontSize: 17,
     color: colors.purple,
     fontWeight: '300',
     marginLeft: 30,

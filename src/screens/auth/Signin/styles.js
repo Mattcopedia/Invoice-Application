@@ -6,11 +6,20 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 24,
   },
+  space: {
+    height: 30
+  },
   footerText: {
     color: colors.grey,
     fontSize: 15,
     textAlign: 'center',
     marginTop: 28,
+  }, 
+  footerCol: {
+    color: colors.grey,
+    fontSize: 15, 
+    textAlign: 'center',
+    marginTop:10,
   }, 
   footerLink: { 
     color: colors.purple,

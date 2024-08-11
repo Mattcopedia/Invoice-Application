@@ -6,9 +6,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   image: {
-    width: '100%',
-    flex: 1,
-  },
+    width:"100%",
+    marginTop: 30,
+    display: "flex",
+    flex: 0.71,
+  }, 
   content: {
     padding: 46,
     paddingTop: 0,

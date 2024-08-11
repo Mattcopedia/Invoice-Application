@@ -2,10 +2,10 @@ import React from 'react';
 import {Pressable, View} from 'react-native';
 import styles from './styles';
 
-const Checkbox = ({checked, onPress}) => {
+const Checkbox = ({checked,onChange}) => {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onChange}
       style={[styles.container, checked ? styles.checkedBox : {}]}>
       {checked ? <View style={styles.innerSquare} /> : null}
     </Pressable>

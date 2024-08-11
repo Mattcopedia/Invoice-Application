@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">ProjectName</string> 
+    <string name="app_name">CRISTO PROJECTS</string> 
 <string name="facebook_app_id">1695690547442767</string>
 <string name="fb_login_protocol_scheme">fb1234</string>
-<string name="facebook_client_token">56789</string>
+<string name="facebook_client_token">56789</string> 
 
 </resources>

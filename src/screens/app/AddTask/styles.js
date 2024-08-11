@@ -4,8 +4,15 @@ import colors from '../../../constants/colors';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20, // Adjust padding as needed
-    marginBottom: 20
+    padding: 15, // Adjust padding as needed
+    marginBottom: 20,
+  },
+  containerProduct: {
+    flex: 1,
+    padding: 15, // Adjust padding as needed
+  },
+  allProduct: {
+
   },
   backContainer: {
     padding: 24,
@@ -22,12 +29,29 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   invoiceText: {
-    fontSize: 17, 
+    fontSize: 14, 
     color: colors.black,
     marginHorizontal: 24,
     fontWeight: '500',
     marginTop: 5,
     marginLeft: 30,
+  },
+  invoiceText2: {
+    fontSize: 17,
+    color: colors.purple,
+    fontWeight: '300',
+    marginLeft: 8,
+    marginVertical: 10,
+    textAlign: "center"
+  },
+  AddProduct: {
+    fontSize: 14, 
+    color: colors.black,
+    marginHorizontal: 24,
+    fontWeight: '500',
+    marginTop: 5,
+    marginLeft: 30,
+    textAlign: "center"
   },
   button: {
     margin: 24,
@@ -52,7 +76,12 @@ const styles = StyleSheet.create({
     marginLeft: 23
   },
   imageBackground: {
-    width: '80%',
+    width: '85%',
+    height: 200, 
+    marginTop: 15
+  },
+  imageBackgroundFlat: {
+    width: '85%',
     height: 200, 
     marginTop: 15
   },
@@ -126,7 +155,40 @@ const styles = StyleSheet.create({
     marginVertical: 85,
     marginHorizontal: 80,
     color: colors.black 
-  }
+  },
+  labelAmount: {
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    color: colors.black,
+    marginVertical: 12,
+    marginLeft: 23,
+    fontSize: 15,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.grey,
+    paddingVertical: 18,
+    marginRight: 23
+  },
+  padLeft: {
+    paddingLeft: 37
+  },
+  text1: {
+    flex: 1,
+    color: colors.purple,
+    textAlign: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 20,
+    marginTop: 200,
+},
+titleProduct: {
+  fontSize: 16,
+  color: colors.purple,
+  fontWeight: '500',
+  textAlign: "center",
+  paddingTop: 40,
+  marginRight: 30
+},
 }); 
 
 export default styles;
