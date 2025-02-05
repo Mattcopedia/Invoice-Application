@@ -1,5 +1,7 @@
 import { StyleSheet } from 'react-native';
 import colors from '../../../constants/colors';
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     containerFlex: {
@@ -209,6 +211,32 @@ const styles = StyleSheet.create({
         marginTop: 5,
         marginLeft: 30,
       },
+       
+    Photo: {
+        width: width * 1,
+        height: 200,
+        marginBottom: 20,
+        flexDirection: "row",
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      modalContent: {
+        width: width * 0.7,
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
+      }, 
+      closeBtn: {
+        paddingLeft: 200,
+        paddingTop: 5,
+        paddingLeft: width * 0.5,
+      },
+      imageBackground: {
+        width: width * 0.85,
+        height: 200, 
+        marginTop: 15
+      }, 
 });
 
 export default styles;

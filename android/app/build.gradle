@@ -176,7 +176,9 @@ dependencies {
     
       implementation project(':react-native-fbsdk-next')  
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
-    
+    implementation ('androidx.activity:activity-ktx:1.7.2')
+implementation ('androidx.activity:activity:1.7.2')
+
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {

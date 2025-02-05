@@ -7,9 +7,11 @@ import { fetchselectedItem } from './redux-thunks/selectedItemThunk';
 import { fetchSummaryData } from './redux-thunks/SummaryThunk';
 import { fetchGeneratedInvoice } from './redux-thunks/GeneratedInvoiceThunk';
 import { fetchProductSelect } from './redux-thunks/ProductSelectThunk';
+import { fetchRefurbish } from './redux-thunks/RefurbishThunk';
+import { fetchRefurbishSummary } from './redux-thunks/RefurbishSummaryThunk';
+import { fetchGeneratedRefurbishInvoice } from './redux-thunks/RefurbishList';
+import { fetchReceipt } from './redux-thunks/ReceiptThunk';
 
-
- 
 export const invoicesSlice = createSlice({
   name: 'invoices',
   initialState: { 
@@ -25,24 +27,37 @@ export const invoicesSlice = createSlice({
     user: null, 
     UserName: "",
     selectedItem: [], 
+    addProduct:[],
     filteredSelectedItem: [],
     GeneratedInvoice:[],
-    InvoiceList:[],
-    addProduct:[],
+    InvoiceList:[], 
+    RefurbishInvoiceList: [],
     specificInvoice: "",
-    productSelect: []
-  },
+    productSelect: [], 
+    receipt:[], 
+    receiptStore: [], 
+    checkBoxSelectedItems: [],
+    refurbish:[],
+    refurbishSummary: [],
+    GeneratedRefurbishInvoiceList: [],
+    receiptList: [], 
+    duplicateInvoiceList:[],
+    invoiceLatest: [],
+    summaryLatest: [], 
+    refurbishSummaryLatest: [],
+    selectField: [],
+  },  
 
 
   extraReducers: (builder) => {
     builder.addCase(fetchProductItem.fulfilled,(state,action) => {
-      state.allProduct = action.payload
+      state.allProduct = action.payload //no filter
     }) 
     builder.addCase(fetchInvoiceData.fulfilled,(state,action) => {
       state.data = action.payload
-    }) 
+    })  
     builder.addCase(fetchproductInvoice.fulfilled,(state,action) => {
-      state.addProduct = action.payload
+      state.addProduct = action.payload //you must filter
     }) 
     builder.addCase(fetchselectedItem.fulfilled,(state,action) => {
       state.selectedItem = action.payload
@@ -56,8 +71,20 @@ export const invoicesSlice = createSlice({
     builder.addCase(fetchProductSelect.fulfilled,(state,action) => {
       state.productSelect = action.payload  
     }) 
+    builder.addCase(fetchReceipt.fulfilled,(state,action) => {
+      state.receiptStore = action.payload     
+    }) 
+    builder.addCase(fetchRefurbish.fulfilled,(state,action) => {
+      state.refurbish = action.payload     
+    }) 
+    builder.addCase(fetchRefurbishSummary.fulfilled,(state,action) => {
+      state.refurbishSummary = action.payload     
+    }) 
+    builder.addCase(fetchGeneratedRefurbishInvoice.fulfilled,(state,action) => {
+      state.GeneratedRefurbishInvoiceList = action.payload     
+    }) 
   },  
-
+  
 
   reducers: {
     setInvoices: (state, action) => {
@@ -96,11 +123,14 @@ export const invoicesSlice = createSlice({
     setSelectedItem: (state, action) => {
       state.selectedItem = action.payload;  
     }, 
-    setGeneratedInvoice: (state, action) => {
+    setGeneratedInvoice: (state, action) => { 
       state.GeneratedInvoice = action.payload;  
     }, 
     setInvoiceList: (state, action) => {
       state.InvoiceList = action.payload;  
+    },  
+    setRefurbishInvoiceList: (state, action) => {
+      state.RefurbishInvoiceList = action.payload;   
     },  
     setfilteredSelectedItem: (state, action) => {
       state.filteredSelectedItem = action.payload;  
@@ -110,14 +140,49 @@ export const invoicesSlice = createSlice({
     },
     setSpecificInvoice: (state,action) => {
       state.specificInvoice = action.payload;  
-    }
-  }, 
+    },
+    setReceipt: (state,action) => {
+      state.receipt = action.payload;  
+    },
+    setReceiptList: (state,action) => {
+      state.receiptList = action.payload;  
+    }, 
+    setCheckBoxSelectedItem: (state,action) => {
+      state.checkBoxSelectedItems = action.payload;  
+    },
+    setRefurbish: (state,action) => {
+      state.refurbish = action.payload;    
+    }, 
+    setRefurbishSummary: (state,action) => {
+      state.refurbishSummary = action.payload;    
+    },   
+    setGeneratedRefurbishInvoiceList: (state,action) => {
+      state.GeneratedRefurbishInvoiceList = action.payload;    
+    },   
+    setDuplicateInvoiceList: (state,action) => {
+      state.duplicateInvoiceList = action.payload     
+    }, 
+    setInvoiceLatest: (state,action) => {
+      state.invoiceLatest = action.payload     
+    },
+    setSummaryLatest: (state,action) => {
+      state.summaryLatest = action.payload     
+    },
+    setRefurbishSummaryLatest : (state,action) => {
+      state.refurbishSummaryLatest = action.payload     
+    },
+    setSelectField : (state,action) => {
+      state.selectField = action.payload     
+    },
+  },  
 });
 
 // Action creators are generated for each case reducer function
 export const {setInvoices, setToUpdate,setinvoiceCreated,setAllProduct,setGoogleUser,
 setImages,setProductItem,setSummary,setUser,setUserName,setSubTotal,setSelectedItem,setGeneratedInvoice
-,setInvoiceList,setfilteredSelectedItem,setAddProduct,setSpecificInvoice
- } = invoicesSlice.actions;
+,setInvoiceList,setfilteredSelectedItem,setAddProduct,setSpecificInvoice,setReceipt,setCheckBoxSelectedItem,setRefurbish,
+setRefurbishSummary,setGeneratedRefurbishInvoiceList, setRefurbishInvoiceList,setReceiptList,setDuplicateInvoiceList,
+setRefurbishSummaryLatest,setSummaryLatest,setInvoiceLatest,setSelectField
+ } = invoicesSlice.actions; 
 
 export default invoicesSlice.reducer;   

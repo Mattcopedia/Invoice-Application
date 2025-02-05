@@ -5,6 +5,8 @@ const styles = StyleSheet.create({
     item: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginVertical: 7
+
     },
     image: {
         height: 85,

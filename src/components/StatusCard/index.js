@@ -3,12 +3,12 @@ import React from 'react';
 import {Text, Pressable} from 'react-native';
 import getStyles from './styles';
 
-const StatusCard = ({label, count, type}) => {
+const StatusCard = ({label, count, type,link}) => {
   const navigation = useNavigation();
   const styles = getStyles(type);
 
   const onPress = () => {
-    navigation.navigate('Tasks');
+    navigation.navigate(link); 
   };
 
   return (
@@ -16,7 +16,7 @@ const StatusCard = ({label, count, type}) => {
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.count}>{count}</Text>
     </Pressable>
-  );
+  ); 
 };
 
 export default React.memo(StatusCard); 

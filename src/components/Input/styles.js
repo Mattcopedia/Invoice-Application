@@ -2,7 +2,7 @@ import {StyleSheet} from 'react-native';
 import colors from '../../constants/colors';
 
 const styles = StyleSheet.create({
-  input: {
+  input1: {
     backgroundColor: colors.lightGrey,
     paddingHorizontal: 24,
     paddingVertical: 13,
@@ -17,6 +17,9 @@ const styles = StyleSheet.create({
     borderColor: colors.grey,
     marginHorizontal: 24,
   },
+  showText: {
+    
+  }, 
   textBox: {
     height: 100,
   }

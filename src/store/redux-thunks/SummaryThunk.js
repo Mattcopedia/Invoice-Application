@@ -6,8 +6,9 @@ export const fetchSummaryData = createAsyncThunk("summaryData/fetchsummaryData",
         try {
             const summarySnapshot = await firestore()
             .collection('Summary')
-            .where('userId', '==',userId)
-            .get();
+            .where('userId', '==', userId)
+            .orderBy('createdAt', 'desc') 
+            .get() 
     
           const newSummary = [];
           summarySnapshot.forEach(documentSnapshot => {
@@ -15,9 +16,9 @@ export const fetchSummaryData = createAsyncThunk("summaryData/fetchsummaryData",
               uid: documentSnapshot.id,
               ...(documentSnapshot.data() || {}),
             });
-          });
-    
-          const sortedSummary = newSummary.sort((a, b) => b.invoiceDate - a.invoiceDate);
+          })
+     
+          const sortedSummary = newSummary
           return sortedSummary[0]
           } catch (error) {
             console.error('Error fetching data:', error);

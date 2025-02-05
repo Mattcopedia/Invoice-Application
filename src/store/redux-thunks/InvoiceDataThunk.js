@@ -16,8 +16,9 @@ export const fetchInvoiceData = createAsyncThunk("InvoiceData/fetchInvoiceData",
                 ...(documentSnapshot.data() || {}),
               });
             });
-      
-            const sortedInvoices = newInvoices.sort((a, b) => b.invoiceDate - a.invoiceDate);
+               
+            const sortedInvoices =  newInvoices.sort((a, b) => b.invoiceDate - a.invoiceDate)
+            console.log(`sortedInvoices3`,sortedInvoices[0])
              return sortedInvoices[0]; 
           } catch (error) {
             console.error('Error fetching data:', error);

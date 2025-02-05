@@ -16,7 +16,6 @@ import AddTask from './screens/app/AddTask';
 import DrawerContent from './components/DrawerContent'; 
 import { setUser } from './store/invoices';
 import ExportPdf from './screens/app/AddTask/ExportPDF';
-import UpdatePdf from './screens/app/AddTask/UpdatePdf'; 
 import ProductItem from './screens/app/AddTask/ProductItem';
 import AllInvoices from './screens/app/ListInvoices/ListInvoices'; 
 import Product from './screens/app/ListInvoices/Product'; 
@@ -25,7 +24,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import colors from './constants/colors';
 import Summary from './screens/app/Summary/Summary';
-import UpdateSummary from './screens/app/Summary/UpdateSummary';
 import HomePage from './screens/app/HomePage/HomePage';
 import SelectProduct from './screens/app/ListInvoices/SelectProduct';  
 import ForgotPassword from './screens/auth/Signin/ForgotPassword';
@@ -39,32 +37,63 @@ import AddProduct from './screens/app/AddTask/AddProduct';
 import GeneratedAddProduct from './screens/app/GeneratedInvoice/GeneratedAddProduct';
 import GeneratedSelectedProducts from './screens/app/GeneratedInvoice/GeneratedSelectedProducts';
 import SelectGenProduct from './screens/app/GeneratedInvoice/SelectGenProduct';
+import ReceiptForm from './screens/app/Receipt/ReceiptForm';
+import EditReceipt from './screens/app/Receipt/EditReceipt';
+import RefurbishProduct from './screens/app/AddTask/RefurbishProduct';
+import RefurbishSummary from './screens/app/Summary/RefurbishSummary';
+import RefurbishmentPdf from './screens/app/AddTask/RefurbishmentPdf';
+import GeneratedRefurbishInvoiceList from './screens/app/Refurbish/GeneratedRefurbishInvoiceList';
+import GeneratedRefurbishInvoice from './screens/app/Refurbish/GeneratedRefurbishInvoice';
+import GeneratedRefurbishProductEdit from './screens/app/Refurbish/GeneratedRefurbishProductEdit';
+import GeneratedRefurbishInvoiceEdit from './screens/app/Refurbish/GeneratedRefurbishInvoiceEdit';
+import GeneratedReceiptPdf from './screens/app/Receipt/GeneratedReceiptPdf';
+import ReceiptPdfList from './screens/app/Receipt/ReceiptPdfList';
 import ProductSelect from './screens/app/ListInvoices/ProductSelect';
 
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
-
+ 
 const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="HomePage" component={HomePage} />
     <Stack.Screen name="AddTask" component={AddTask} />
-    <Stack.Screen name="UpdatePdf" component={UpdatePdf} />
     <Stack.Screen name="Product" component={Product} />
     <Stack.Screen name="SelectProduct" component={SelectProduct} />
-    <Stack.Screen name="ProductSelect" component={ProductSelect} />
-    <Stack.Screen name="ProductItem" component={ProductItem} />
+    <Stack.Screen name="ProductSelected" component={ProductSelected} />
+    <Stack.Screen name="ProductSelect" component={ProductSelect} />  
+    <Stack.Screen name="ProductItem" component={ProductItem} /> 
     <Stack.Screen name="AddProduct" component={AddProduct} />
     <Stack.Screen name="Summary" component={Summary} />
-    <Stack.Screen name="UpdateSummary" component={UpdateSummary} />
     <Stack.Screen name="GeneratedInvoice" component={GeneratedInvoice} />
     <Stack.Screen name="GeneratedProductEdit" component={GeneratedProductEdit} />
     <Stack.Screen name="GeneratedInvoiceEdit" component={GeneratedInvoiceEdit} />
     <Stack.Screen name="ExportPdf" component={ExportPdf} />
-    <Stack.Screen name="ProductSelected" component={ProductSelected} />
-  </Stack.Navigator>
-);
+    <Stack.Screen name="RefurbishProduct" component={RefurbishProduct} />
+    <Stack.Screen name="RefurbishSummary" component={RefurbishSummary} />
+    <Stack.Screen name="RefurbishmentPdf" component={RefurbishmentPdf} />   
+
+    <Stack.Screen name="GeneratedRefurbishInvoiceList" component={GeneratedRefurbishInvoiceList} />  
+    <Stack.Screen name="GeneratedRefurbishInvoice" component={GeneratedRefurbishInvoice} />
+    <Stack.Screen name="GeneratedRefurbishProductEdit" component={GeneratedRefurbishProductEdit} />
+    <Stack.Screen name="GeneratedRefurbishInvoiceEdit" component={GeneratedRefurbishInvoiceEdit} />  
+    <Stack.Screen name="GeneratedInvoiceList" component={GeneratedInvoiceList} /> 
+
+
+    <Stack.Screen name="ReceiptForm" component={ReceiptForm} /> 
+    <Stack.Screen name="EditReceipt" component={EditReceipt} />
+    <Stack.Screen name="GeneratedReceiptPdf" component={GeneratedReceiptPdf} />
+    <Stack.Screen name="ReceiptPdfList" component={ReceiptPdfList} />   
+    <Stack.Screen name="AllInvoices" component={AllInvoices} /> 
+ 
+    <Stack.Screen name="GeneratedAddProduct" component={GeneratedAddProduct} />
+    <Stack.Screen name="GeneratedSelectedProducts" component={GeneratedSelectedProducts} />
+    <Stack.Screen name="SelectGenProduct" component={SelectGenProduct} /> 
+
+ 
+  </Stack.Navigator>  
+);  
 
 const GeneratedInvoiceStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -78,14 +107,27 @@ const GeneratedInvoiceStack = () => (
   </Stack.Navigator>
 );
 
-const AllInvoicesStack = () => (
+const GeneratedRefurbishInvoiceStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="AllInvoices" component={AllInvoices} />
-    <Stack.Screen name="Product" component={Product} />
-   <Stack.Screen name="ProductSelect" component={ProductSelect} />
-
+     <Stack.Screen name="GeneratedRefurbishInvoiceList" component={GeneratedRefurbishInvoiceList} />  
+    <Stack.Screen name="GeneratedRefurbishInvoice" component={GeneratedRefurbishInvoice} />
+    <Stack.Screen name="GeneratedRefurbishProductEdit" component={GeneratedRefurbishProductEdit} />
+    <Stack.Screen name="GeneratedRefurbishInvoiceEdit" component={GeneratedRefurbishInvoiceEdit} />  
+    <Stack.Screen name="GeneratedInvoiceList" component={GeneratedInvoiceList} /> 
   </Stack.Navigator>
 );
+
+
+const AllInvoicesStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}> 
+  {/* <Stack.Screen name="ExportPdf" component={ExportPdf} />  */}
+     {/* <Stack.Screen name="RefurbishmentPdf" component={RefurbishmentPdf} />     */}
+    <Stack.Screen name="AllInvoices" component={AllInvoices} />     
+    <Stack.Screen name="Product" component={Product} />
+    <Stack.Screen name="ProductSelected" component={ProductSelected} />
+    <Stack.Screen name="ProductSelect" component={ProductSelect} />   
+  </Stack.Navigator>
+); 
 
 
 const Tabs = () => {
@@ -94,7 +136,7 @@ const Tabs = () => {
   return (
     <Tab.Navigator screenOptions={{ tabBarShowLabel: false, headerShown: false, tabBarHideOnKeyboard: true }}>
       <Tab.Screen
-        name="Home"
+        name="HomeTab"
         component={HomeStack}
         options={{
           tabBarIcon: ({ focused }) => (
@@ -108,7 +150,7 @@ const Tabs = () => {
             <TouchableOpacity
               {...props}
               onPress={() => {
-                navigation.navigate("Home", {
+                navigation.navigate("HomeTab", {
                   screen: "HomePage", // reset to HomePage within HomeStack
                 });
               }}
@@ -117,7 +159,7 @@ const Tabs = () => {
         }}
       />
       <Tab.Screen
-        name="GeneratedInvoices"
+        name="GeneratedInvoicesTab"
         component={GeneratedInvoiceStack}
         options={{
           tabBarIcon: ({ focused }) => (
@@ -131,17 +173,42 @@ const Tabs = () => {
             <TouchableOpacity
               {...props}
               onPress={() => {
-                navigation.navigate("GeneratedInvoices", {
-                  screen: "GeneratedInvoiceList", // reset to GeneratedInvoiceList within GeneratedInvoiceStack
+                navigation.navigate("GeneratedInvoicesTab", {
+                  screen: "GeneratedInvoiceList",
                 });
               }}
             />
           ),
         }}
       />
+
+      <Tab.Screen
+        name="GeneratedRefurbishInvoiceTab" 
+        component={GeneratedRefurbishInvoiceStack}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <Update
+              name="history-edu"
+              size={25}
+              color={focused ? colors.purple : colors.grey}
+            />
+          ),
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...props}
+              onPress={() => {
+                navigation.navigate("GeneratedRefurbishInvoiceTab", {
+                  screen: "GeneratedRefurbishInvoiceList", 
+                });
+              }}
+            />
+          ),
+        }}
+      />
+      
       <Tab.Screen
         name="AllInvoicesTab"
-        component={AllInvoicesStack}
+        component={AllInvoicesStack} 
         options={{
           tabBarIcon: ({ focused }) => (
             <Entypo
@@ -169,6 +236,7 @@ const Tabs = () => {
 const MainStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Tabs" component={Tabs} />
+
   </Stack.Navigator>
 );
 

@@ -10,11 +10,12 @@ import {
   Text,
   Modal,
   TouchableOpacity,
-  View, 
+  View,
+  Keyboard, 
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import ImagePicker from 'react-native-image-crop-picker';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';  
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -29,14 +30,14 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import PlusIcon from '../../../components/PlusIcon';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
+import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceThunk';
+import { choosePhotoFromLibrary, takePhotoFromCamera } from '../../../constants/htmlContent';
 
 const Product = ({ route }) => {
  const navigation = useNavigation()
   const isFocused = useIsFocused();
   const user = useSelector(state => state?.invoices?.user)
-  const invoices = useSelector(state => state?.invoices?.data)
-
-  const images =  useSelector(state => state.invoices.images);   
+  const invoices = useSelector(state => state?.invoices?.invoiceLatest)  
   const dispatch = useDispatch(); 
   const [Description, setDescription] = useState(route.params.item?.Description);
   const [UnitPrice, setUnitPrice] = useState(route.params.item?.UnitPrice);
@@ -44,6 +45,7 @@ const Product = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const [errorLoading,SetErrorLoading] = useState(false)
   const [image, setImage] = useState(route.params.item?.ImageUri)    
+  const images = route.params.item?.ImageUri
   const [modalVisible, setModalVisible] = useState(false);  
   const [uploading, setUploading] = useState(false);
   const [transferred, setTransferred] = useState(0)
@@ -59,6 +61,9 @@ const Product = ({ route }) => {
         setUnitPrice(route.params.item?.UnitPrice)
         setSampleCode(route.params.item?.SampleCode)
         setImage(route.params.item?.ImageUri)
+        dispatch(fetchProductItem(user?.uid))  
+        dispatch(fetchProductSelect(user?.uid))       
+        dispatch(fetchproductInvoice(user?.uid))   
     }
 }, [isFocused, route.params]);
 
@@ -66,39 +71,7 @@ const handleBack = () => {
   navigation.navigate("AllInvoices");
 };
 
-  const takePhotoFromCamera = () => {
-    ImagePicker.openCamera({
-      compressImageMaxWidth: 300, 
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true, 
-    }).then(image => {
-      console.log(image);
-      setImage(image.path) 
-      setModalVisible(false);
-    }); 
-  }
 
-  const choosePhotoFromLibrary = () => {
-    ImagePicker.openPicker({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true, 
-    }).then(image => {
-      console.log(image);
-      setImage(image.path)
-      setModalVisible(false);
-    }); 
-  }
 
 
 
@@ -183,7 +156,7 @@ const handleBack = () => {
     
     firestore() 
     .collection('ProductItem') 
-    .doc(route.params.item?.uid)   
+    .doc(route.params.item?.uid)    
     .update({ 
         Description: Description, 
         completeDescription: `${Description} - ${SampleCode}`,
@@ -197,8 +170,10 @@ const handleBack = () => {
         Alert.alert('Data updated successfully');  
         setLoading(false);  
         dispatch(fetchProductItem(user?.uid))  
-        dispatch(fetchProductSelect(user?.uid))  
-        navigation.navigate('AllInvoices');   
+        dispatch(fetchProductSelect(user?.uid))       
+        dispatch(fetchproductInvoice(user?.uid))  
+        navigation.navigate('AllInvoices');
+        Keyboard.dismiss();   
       })
       .catch(e => {
         console.log('error when updating invoice :>> ', e);
@@ -224,31 +199,6 @@ const handleBack = () => {
 }   
 
 
-
-if (!invoices?.userId ) {
-
-  return (
-      <SafeAreaView style={styles.container}>
-           <Pressable style={styles.backContainer} hitSlop={8} onPress={handleBack}>
-      <Image
-        style={styles.backIcon}
-        source={require('../../../assets/back.png')}
-      />
-    </Pressable> 
-         
-       <Title type="thin">Update Product</Title> 
-  <ScrollView> 
-  
-        <Text style={styles.invoiceText}> Add a Product</Text>
-  
-      </ScrollView>
-      <PlusIcon />  
-       
-      </SafeAreaView>  
-    
-  )  
-}  
-
   return (
    
     <SafeAreaView style={styles.container} >
@@ -259,8 +209,8 @@ if (!invoices?.userId ) {
         />
       </Pressable> 
            
-      <ScrollView>
-      <Title type="thin">Update Product</Title> 
+      <ScrollView  keyboardShouldPersistTaps="handled">
+      <Title type="thin">Update Product</Title>  
       <TouchableOpacity onPress={() => setModalVisible(true)}>
           <View style={styles.Photo}>
             <ImageBackground source={{ uri: image }} style={styles.imageBackground}>
@@ -269,24 +219,32 @@ if (!invoices?.userId ) {
             </View> 
         </TouchableOpacity>
   
-        <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => {
-          setModalVisible(false);  
-        }}> 
+        <Modal animationType="fade" transparent={true} visible={modalVisible } onRequestClose={() => { setModalVisible(false); }}>
+              
+        <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalContent}>  
 
-                <View style={styles.centeredView}> 
-                  <View style={styles.modalView}>
-                    <TouchableOpacity onPress={takePhotoFromCamera} style={styles.buttonUpload}>
-                      <SimpleLineIcons size={60}  color={colors.black} name="camera" /> 
-                      <Text style={styles.textStyle}>Camera</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={choosePhotoFromLibrary} style={styles.buttonUpload}>
-                      <MaterialIcons size={60}  color={colors.black} name="photo-library" /> 
-                      <Text style={styles.textStyle}>Library</Text>  
-                    </TouchableOpacity>
-                    <AntDesign size={20} onPress={() => setModalVisible(false)}  style={styles.closeButton} color={colors.black} name="close" /> 
-                  </View>   
-                </View>   
-              </Modal>
+              <View  onPress={() => setModalVisible(false)} >
+                 <AntDesign size={20}  style={styles.closeBtn} color={colors.black} name="close" /> 
+                 </View>    
+ 
+                <View style={styles.alignIcon}>
+                <Pressable onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <SimpleLineIcons onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="camera" /> 
+                    <Text onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Camera</Text>
+                  </Pressable>
+
+                  <Pressable onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <MaterialIcons onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="photo-library" /> 
+                    <Text onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Library</Text>  
+                  </Pressable> 
+                </View> 
+                 
+                </View>     
+              </Pressable>
+  
+              </Modal> 
+  
        
        {uploading ? (
         <View style={styles.status}>
@@ -310,7 +268,7 @@ if (!invoices?.userId ) {
           placeholder="Enter Description"
           multiline={true}
           numberOfLines={1} 
-          // autoFocus={true}
+          // autoFocus={true} 
         /> 
          {(!Description ||Description?.trim() === "" ) && errorLoading  ? <Text style={styles.errorText}>Description is required</Text> : null}
 

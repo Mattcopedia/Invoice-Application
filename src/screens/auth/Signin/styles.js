@@ -56,7 +56,18 @@ const styles = StyleSheet.create({
   },
   IconFaceBookText: {
     marginLeft: 52
-  }
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+  }, 
+  eyeIcon: {
+    padding: 2,
+    marginLeft: 'auto',
+    padding: 15,
+    borderRadius: 10, 
+  },
 });
 
 export default styles;

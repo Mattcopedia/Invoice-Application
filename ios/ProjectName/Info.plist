@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+<key>NSCameraUsageDescription</key>
+<string>Your custom message for camera usage.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Your custom message for photo library usage.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Your custom message for microphone usage.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>

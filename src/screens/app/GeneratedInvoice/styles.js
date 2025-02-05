@@ -1,6 +1,9 @@
 import { StyleSheet } from 'react-native';
 import colors from '../../../constants/colors';
 
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
     containerFlex: {
         flex: 1,
@@ -149,22 +152,27 @@ const styles = StyleSheet.create({
     textPhoto: {
         color: colors.white 
     },
-    centeredView: {
+    modalBackground: {
         flex: 1,
-        marginTop: 22,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        flexDirection: "column",
-        backgroundColor: 'rgba(0,0,0,0.5)' 
-    },
-    modalView: {
+      },
+      modalContent: {
+        width: '70%',
+        padding: 10,
         backgroundColor: 'white',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: "row",
         borderRadius: 10,
-        paddingLeft: 30
-    },
+        alignItems: 'center',
+      },
+      closeBtn: {
+        paddingLeft: 200,
+        paddingTop: 5,
+      },
+      alignIcon: {
+        display: "flex",
+       flexDirection: "row"
+     },
     buttonUpload: { 
         justifyContent: 'center',
         alignItems: 'center',  
@@ -252,6 +260,32 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         textAlign: "center"
       },
+  
+    Photo: {
+      width: width * 1,
+      height: 200,
+      marginBottom: 20,
+      flexDirection: "row",
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalContent: {
+      width: width * 0.7,
+      padding: 10,
+      backgroundColor: 'white',
+      borderRadius: 10,
+      alignItems: 'center',
+    }, 
+    closeBtn: {
+      paddingLeft: 200,
+      paddingTop: 5,
+      paddingLeft: width * 0.5,
+    },
+    imageBackground: {
+      width: width * 0.85,
+      height: 200, 
+      marginTop: 15
+    }, 
 });
 
 export default styles;

@@ -1,16 +1,34 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {Pressable, View,FlatList, Image,Text, TouchableOpacity} from 'react-native';
 import styles from './SelectStyles';
 import { useNavigation } from '@react-navigation/native';
 import Checkbox from '../Checkbox';
+import { useDispatch, useSelector } from 'react-redux';
+import { RefreshControl } from 'react-native-gesture-handler';
+import { fetchProductItem } from '../../store/redux-thunks/ProductItemThunk';
+import { fetchProductSelect } from '../../store/redux-thunks/ProductSelectThunk';
 
-const FlatListSelect = ({filteredAllInvoices,type,handleCheckboxChange}) => {
+const FlatListSelect = ({filteredAllInvoices,type,handleCheckboxChange}) => { 
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const user = useSelector(state => state?.invoices?.user) 
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    dispatch(fetchProductItem(user?.uid))  
+    dispatch(fetchProductSelect(user?.uid))  
+    setRefreshing(false); 
+  }, [])    
+
  
   return (
     <FlatList
     showsVerticalScrollIndicator={true}
     data={filteredAllInvoices}
+    refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     keyExtractor={(item, index) => index.toString()}
     renderItem={({ item, index }) => (
         <Pressable style={styles.containerFlex} onPress={() => handleCheckboxChange(index)}>

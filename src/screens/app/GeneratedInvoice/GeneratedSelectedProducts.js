@@ -1,6 +1,6 @@
 
 
-import moment from 'moment'; 
+import moment from 'moment';  
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator, 
@@ -14,7 +14,8 @@ import {
   Modal,
   TouchableOpacity,
   View,
-  BackHandler,  
+  BackHandler,
+  Keyboard,  
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import Button from '../../../components/Button';  
@@ -28,12 +29,12 @@ import InvoiceText from '../../../components/invoiceText/invoiceText';
 import { useNavigation } from '@react-navigation/native';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
+import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 
-const GeneratedSelectedProducts = () => {
+const GeneratedSelectedProducts = ({route}) => {
     const navigation = useNavigation()
   const dispatch = useDispatch();
   const itemInvoice = useSelector(state => state?.invoices?.specificInvoice); 
-  console.log("itemIn",itemInvoice)
   const filteredSelectedItem = useSelector(state => state?.invoices?.filteredSelectedItem); 
 
   const [productItems, setProductItems] = useState(
@@ -46,6 +47,7 @@ const GeneratedSelectedProducts = () => {
   const [errorLoading, setErrorLoading] = useState(false); 
   const user = useSelector(state => state?.invoices?.user)
   const invoices  = useSelector(state => state?.invoices?.data);  
+  const invoiceType =  itemInvoice.invoiceType 
 
 
   useEffect(() => {
@@ -60,6 +62,7 @@ const GeneratedSelectedProducts = () => {
         invoiceDate: item.invoiceDate,
       }))
     );
+    dispatch(fetchInvoiceData(user?.uid))  
   }, [filteredSelectedItem]);
 
 
@@ -146,10 +149,10 @@ const GeneratedSelectedProducts = () => {
       Alert.alert('All product items selected successfully');
       setLoading(false);
       dispatch(setToUpdate());
-      setProductItems([{ Quantity: "1", UnitPrice: '', Amount: '',SampleCode: "" }])
-      dispatch(fetchProductItem(user?.uid))  
+      dispatch(fetchProductItem(user?.uid))   
       dispatch(fetchProductSelect(user?.uid))   
-      navigation.navigate('GeneratedInvoiceEdit');  
+      navigation.navigate('GeneratedInvoiceEdit');   
+      Keyboard.dismiss();
     }  
      
     catch (error) { 
@@ -171,7 +174,7 @@ const GeneratedSelectedProducts = () => {
         />
       </Pressable> 
       <Title type="thin">Selected Products</Title>
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
         {productItems.map((item, index) => (
           <View key={index}>
           <Text style={styles.label}>Product Item {index+1}</Text>
@@ -207,8 +210,10 @@ const GeneratedSelectedProducts = () => {
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>Amount</Text>
-            <Text style={styles.labelAmount}>{item?.Amount}</Text> 
+                        <View>
+                        <Text style={styles.label}>Amount</Text>
+                        <Text style={styles.labelAmount}>{item.Amount}</Text> 
+                        </View> 
         
 
            <View style={{height: 37}}></View>

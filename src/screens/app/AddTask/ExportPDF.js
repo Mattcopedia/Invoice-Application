@@ -1,13 +1,8 @@
-import React,{useState, useEffect} from 'react'
+import React,{useState, useEffect, useCallback} from 'react'
 import {SafeAreaView, ImageBackground, FlatList,ScrollView, ActivityIndicator} from 'react-native';
-import { PermissionsAndroid, Platform } from 'react-native';
 import {  Text, View } from 'react-native'
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import FileViewer from 'react-native-file-viewer';
-import RNFS from 'react-native-fs';
 import { Alert } from 'react-native';  
 import { useSelector, useDispatch } from 'react-redux';
-import storage from '@react-native-firebase/storage'; 
 import styles from './styles';
 import { setAddProduct, setImages, setSelectedItem  } from '../../../store/invoices';
 import InvoiceText from '../../../components/invoiceText/invoiceText';
@@ -15,9 +10,6 @@ import Button from '../../../components/Button';
 import Header from '../../../components/Header';
 import { useIsFocused } from '@react-navigation/native'; 
 import { calculateTotalAmount, convertDate, formatNumberWithCommas, getName, getWelcomeName, numberToWords } from '../../../constants/categories';
-
-import firestore from '@react-native-firebase/firestore';
-
 import auth from '@react-native-firebase/auth';  
 import { setUserName} from '../../../store/invoices'; 
 import { htmlStyles } from '../../../constants/styles'; 
@@ -25,27 +17,33 @@ import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceT
 import { fetchSummaryData } from '../../../store/redux-thunks/SummaryThunk';
 import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
+import { createPDF } from '../../../constants/helperFunctions';
+import firestore from '@react-native-firebase/firestore';
+
+
 
 const ExportPdf = ({ navigation }) => {  
   const dispatch = useDispatch(); 
-  const isFocused = useIsFocused();
+  const isFocused = useIsFocused(); 
   const [count,setCount] = useState(1) 
   const toUpdate = useSelector(state => state?.invoices?.toUpdate);
   const user = useSelector(state => state?.invoices?.user)
-  const invoices = useSelector(state => state?.invoices?.data)  
-  const summary = useSelector(state => state?.invoices?.summary)
-  const addProduct = useSelector(state => state?.invoices?.addProduct); 
+  const invoices = useSelector(state => state?.invoices?.invoiceLatest)   
+  const dateString = invoices?.invoiceDate
+  const invoiceDate = firestore.Timestamp.fromDate(new Date(dateString))
+  const summary = useSelector(state => state?.invoices?.summaryLatest)  
+  const addProduct = useSelector(state => state?.invoices?.addProduct);  
   const UserName =  useSelector(state => state?.invoices?.UserName);   
   const GoogleUser = useSelector(state =>state?.invoices?.GoogleUser )
   const selectedItem  = useSelector(state => state?.invoices?.selectedItem); 
   const filterselectedProducts = selectedItem?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
   const filteredProducts = addProduct?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
-  const arrangedProducts = filteredProducts?.slice().reverse();   
+  const arrangedProducts = filteredProducts?.slice().reverse();    
  const finalProduct = filterselectedProducts.concat(arrangedProducts);  
  const [loading, setLoading] = useState(false);
 
 
-const dateFormatted = convertDate(invoices?.invoiceDate.toDate())  
+const dateFormatted = convertDate(invoiceDate?.toDate())     
  
 const unsubscribe = auth().onAuthStateChanged(user => { 
   if (user) {
@@ -53,16 +51,22 @@ const unsubscribe = auth().onAuthStateChanged(user => {
   }  
 }); 
 
+console.log(`selectedItemreal`,selectedItem,invoices?.invoiceNo) 
+
 const subTotal = calculateTotalAmount(finalProduct)  
 
+const generatePDF =() => {
+  createPDF('GeneratedInvoice',invoices,htmlContent,count,setCount,finalProduct,Vat,subTotal,discount,summary,user,sumTotal,GoogleUser,UserName,GrandTotal,AmountInWords,false,invoiceDate)
+}
+ 
 useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
     try {
       dispatch(fetchproductInvoice(user?.uid))  
       dispatch(fetchSummaryData(user?.uid))  
-      dispatch(fetchInvoiceData(user?.uid))  
-      dispatch(fetchselectedItem(user?.uid))   
+      dispatch(fetchInvoiceData(user?.uid))    
+      dispatch(fetchselectedItem(user?.uid))  
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -95,21 +99,17 @@ const createTableRows = () => {
     ` 
   });
 
-  return tableRows; 
+  return tableRows;  
 };
 
-  const handleNavigate = () => {
-    navigation.navigate('UpdatePdf');   
-  };  
- 
 
 
- const discount = summary?.Discount.trim() !== "" ? subTotal * (parseFloat(summary?.Discount) / 100) : 0
+ const discount = summary?.Discount?.trim() !== "" ? subTotal * (parseFloat(summary?.Discount) / 100) : 0
 
  let sumTotal = ( parseFloat(subTotal) + parseFloat(summary?.Transportation || 0) +  
 parseFloat(summary?.Installation || 0));
 
- if (summary?.Discount.trim() !== "" || !isNaN(summary?.Discount)) {  
+ if (summary?.Discount?.trim() !== "" || !isNaN(summary?.Discount)) {  
     sumTotal -= discount   
  } 
  
@@ -131,7 +131,7 @@ const AmountInWords = numberToWords(GrandTotal)
 
 const sumTotalField = () => {
 
-   if(summary?.Discount.trim() == "" || summary?.Discount == undefined || isNaN(summary?.Discount)
+   if(summary?.Discount?.trim() == "" || summary?.Discount == undefined || isNaN(summary?.Discount)
   ||summary?.Discount <= 0) {
     return ``  
    } 
@@ -155,16 +155,6 @@ const NoteField = () => {
   return ``
 }
 
-const CompanyName = () => {
-  if(invoices?.Companyname?.trim() !== "") {
-    return `
-    ${invoices?.Companyname} 
-      `
-  }
-  return ``
-}
-
-
 const VATFIELD = () => {
   if(summary?.selectedVAT === "Yes") {
     return `
@@ -180,7 +170,7 @@ const VATFIELD = () => {
 
 
 const TransportationField = () => {
-  if(summary?.Transportation.trim() === "0") {
+  if(summary?.Transportation?.trim() === "0") {
     return `  
     <tr>
     <td colspan="4" class="totalbody">TRANSPORTATION</td> 
@@ -198,7 +188,7 @@ const TransportationField = () => {
 }
 
 const InstallationField = () => {
-  if(summary?.Installation.trim() === "0") {
+  if(summary?.Installation?.trim() === "0") {
     return `   
     <tr>
     <td colspan="4" class="totalbody">INSTALLATION</td> 
@@ -264,7 +254,7 @@ const displayFinalCalculations = () => {
 
     <tr>
     <td colspan="1" class="totalbody">VALIDITY OF QUOTE:</td> 
-    <td colspan="4" class=" left"> 3 DAYS</td>
+    <td colspan="4" class=" left"> ${summary?.Validity} DAYS</td>
     </tr>
 
 
@@ -356,9 +346,10 @@ const displayFinalCalculations = () => {
 
               <div class="description">
                 <p class="color">Attn: ${invoices?.Attention}</p>
-                <p class="color">${CompanyName()}</p>
-                <p class="color">LOCATION: ${invoices?.Address}</p>
-              </div>
+                <p class="color">${invoices?.Companyname}</p> 
+                <p class="color">LOCATION: ${invoices?.Address}</p> 
+                 <p class="color">${invoices?.phoneNumber}</p> 
+              </div> 
 
               <div class="date">
                <p class="color" > Date: ${dateFormatted} </p>
@@ -405,193 +396,7 @@ const displayFinalCalculations = () => {
   </html>
 `;
 
-const UploadPDF = async (filePath) => {
  
-  const uploadUri = filePath; 
-  let filename = uploadUri.substring(uploadUri.lastIndexOf("/") + 1);
-  
-  //Add timestamp so that every Image will be unique for every occurence of image upload.
-  const extension = filename.split(".").pop();
-  const name = filename.split(".").slice(0,-1).join("."); 
-  filename = name + Date.now() + "." + extension //by adding timestamp to it, we make every date unique
-  
-  const directory = user?.uid;   
-    const task = storage().ref(`${directory}/files/${filename}`).putFile(uploadUri) 
-  // const task = storage().ref(filename).putFile(uploadUri)  
-    
-  try { 
-    await task;   
-  } catch(e) {
-    console.log(e);
-  } 
-
-}
-
-
-async function requestStoragePermission() {
-  if (Platform.OS === 'android') {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission Required',
-          message: 'This app needs access to your storage to save PDFs',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('Storage Permission Granted.');
-      } else {
-        console.log('Storage Permission Denied.');
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  }
-}
-
-
-const createPDF = async () => {
-  requestStoragePermission();
-
-  await firestore()
-  .collection('GeneratedInvoice') 
-  .add({ 
-    Product:finalProduct,
-    invoiceDate:invoices?.invoiceDate,
-    Address:invoices?.Address,
-    invoiceNo:invoices?.invoiceNo,
-    Date: invoices?.invoiceDate,
-    CompanyName:invoices?.Companyname,
-    Attention:invoices?.Attention,
-    invoiceType:invoices?.invoiceType,
-    subTotal:subTotal,
-    discountValue:discount,
-    Vat:Vat,
-    GrandTotal: GrandTotal,
-    sumTotal:sumTotal,
-    DeliveryPeriod:summary?.DeliveryPeriod,
-    Discount:summary?.Discount,
-    Installation:summary?.Installation,
-    Note:summary?.Note, 
-    Transportation:summary?.Transportation, 
-    selectedPaymentPlan:summary?.selectedPaymentPlan,
-    selectedWarranty:summary?.selectedWarranty,
-    selectedVAT: summary?.selectedVAT,
-    AmountInWords: AmountInWords,
-    userId: user?.uid,  
-    userName: UserName?.displayName,
-    Paid: "No", 
-    GoogleUserName: GoogleUser ? GoogleUser?.name : "", 
-  })
-  .catch(e => { 
-    console.log('error when adding information :>> ', e);
-    Alert.alert(e.message);   
-  }); 
-
-  const sanitizeFileName = (name) => {
-    return name.replace(/[^a-zA-Z0-9]/g, ' '); 
-  };
-
-  
-  const generateUniqueFileName = async (baseName, folderPath) => {
-    const maxRetries = 100; 
-    let retryCount = 0;
-    let fileName;
-    let filePath;
-   
-    while (retryCount < maxRetries) {
-      const randomNumber = Math.floor(Math.random() * 20) + 1;
-      fileName = `${baseName}(${randomNumber}).pdf`;
-      filePath = `${folderPath}/${fileName}`;
-  
-      if (!(await RNFS.exists(filePath))) {
-        return fileName;
-      }
-      
-      retryCount++;
-    }
-    Alert.alert("Unable to generate a unique file name after multiple attempts")
-    throw new Error('Unable to generate a unique file name after multiple attempts');
-  };
-  const baseName = `${sanitizeFileName(invoices?.invoiceType)}_${sanitizeFileName(invoices?.Companyname)}(${count})`;
- 
-  try { 
-  let options = {  
-    html: htmlContent,  
-    fileName: baseName,        
-    base64: true 
-  };  
-
-  const pdf = await RNHTMLtoPDF.convert(options);
-
-  if (pdf.base64) {
-    const folderPath = Platform.OS === 'android' 
-    ? `${RNFS.DownloadDirectoryPath}/Cristo Invoice`
-    : `${RNFS.DocumentDirectoryPath}/Cristo Invoice`;
-
-    const folderExists = await RNFS.exists(folderPath);
-    if (!folderExists) {
-      await RNFS.mkdir(folderPath);
-    }
-    const uniqueFileName = await generateUniqueFileName(baseName, folderPath);
-    const filePath = `${folderPath}/${uniqueFileName}`;
-
-    await RNFS.writeFile(filePath, pdf.base64, 'base64');
-    console.log('PDF saved at:', filePath);
-    UploadPDF(filePath);
-
-
-      Alert.alert('Success', `PDF saved at: /internal storage/Download/Cristo Invoice/${uniqueFileName}`, [ 
-          {text: "Cancel", style: "cancel"},
-          {text: "Open", onPress: () => openFile(filePath)}
-      ], {cancelable: true});
-  
-      setCount(count + 1); 
-
-    }  
-
-  } catch (error) {
-      console.error('Error generating PDF:', error);
-      Alert.alert('Error', 'Failed to create PDF. Please try again.');
-  }
-
-  } 
-
- 
- 
- const openFile = async (filepath) => {
-  const path = filepath; 
-  try {
-    await FileViewer.open(path);  
-  } catch (error) {
-    console.error('Error opening file:', error);
-    Alert.alert('Error', 'Failed to open PDF file. Please try again.');
-  }
-};
-
-
-if (!invoices?.Address) {
-  return (
-
-    <SafeAreaView style={styles.container}>
-    <Header title="Invoice Preview" />  
-<ScrollView>  
-
-      <View style={styles.padLeft}>
-        <InvoiceText>Welcome, {getWelcomeName()} </InvoiceText>
-      </View>
-
-    <Text style={styles.text1}>Create an Invoice</Text>
-    </ScrollView>
-    </SafeAreaView>  
-  )  
-}
-
-
-
 
 
   return (
@@ -637,13 +442,32 @@ if (!invoices?.Address) {
                 {invoices?.Companyname}
                 </InvoiceText> 
                 </View>
-                ) 
+                )  
                 }
 
                 <Text style={styles.invoiceText}>Attention</Text>
                 <InvoiceText>
                   {invoices?.Attention}
                 </InvoiceText>
+                  
+                {(!invoices?.Companyname || invoices?.Companyname?.trim() === "") && (
+                  <View>
+                <Text style={styles.invoiceText}>Phone Number</Text>
+                <InvoiceText>
+                  {invoices?.phoneNumber}
+                </InvoiceText>
+                  </View> 
+                )}
+
+        {(invoices?.Email || invoices?.Email?.trim() !== "") && (
+                          <View>
+                        <Text style={styles.invoiceText}>Email address</Text>
+                        <InvoiceText>
+                          {invoices?.Email}
+                        </InvoiceText>
+                          </View>  
+                        )}
+                
               
                 <Text style={styles.invoiceText}>Address</Text>
                 <InvoiceText>
@@ -670,11 +494,11 @@ if (!invoices?.Address) {
                 ₦{subTotal}
                 </InvoiceText> 
 
-                {summary?.Discount.trim() !== "" && (
+                {summary?.Discount?.trim() !== "" && (
                   <View>
 
                 <Text style={styles?.invoiceText}>DISCOUNT</Text>
-                {summary?.Discount.trim() !== "0" ? (  
+                {summary?.Discount?.trim() !== "0" ? (  
                   <InvoiceText>
                 {summary?.Discount}%
                 </InvoiceText> ) :
@@ -689,7 +513,7 @@ if (!invoices?.Address) {
 
                 <Text style={styles?.invoiceText}>Installation</Text>
 
-                {summary?.Installation.trim() !== "0" ? (  
+                {summary?.Installation?.trim() !== "0" ? (  
                   <InvoiceText>
                 ₦{summary?.Installation}
                 </InvoiceText> ) : 
@@ -699,7 +523,7 @@ if (!invoices?.Address) {
                 } 
 
                 <Text style={styles?.invoiceText}>Transportation</Text>
-                {summary?.Transportation.trim() !== "0" ? (  
+                {summary?.Transportation?.trim() !== "0" ? (  
                   <InvoiceText>
                 ₦{summary?.Transportation}
                 </InvoiceText> ) :
@@ -709,6 +533,16 @@ if (!invoices?.Address) {
                 }  
 
 
+      <Text style={styles?.invoiceText}>Vat</Text>
+                      <InvoiceText>
+                      {Math.ceil(Vat)}
+                      </InvoiceText> 
+
+                      <Text style={styles?.invoiceText}>GrandTotal</Text>
+                      <InvoiceText>
+                      {Math.ceil(GrandTotal)}
+                      </InvoiceText> 
+
                 <Text style={styles?.invoiceText}>Delivery Period</Text>
                 <InvoiceText>
                 {summary?.DeliveryPeriod} DAYS
@@ -716,10 +550,10 @@ if (!invoices?.Address) {
 
                 <Text style={styles?.invoiceText}>Validity of Quote</Text>
                 <InvoiceText>
-                  5 DAYS
+                {summary?.Validity} DAYS 
                 </InvoiceText> 
 
-                {summary?.Note.trim() !== "" && (
+                {summary?.Note?.trim() !== "" && (
                   <View>
                 <Text style={styles?.invoiceText}>Note</Text>
                 <InvoiceText>
@@ -730,17 +564,11 @@ if (!invoices?.Address) {
                 }
                </> 
                 ) 
-                }
-
-         
+                } 
               
-                <Button style={styles.button} type="blue" onPress={() => createPDF()}>
-                      <Text>Generate Invoice</Text>   
+                <Button style={styles.button} type="blue" onPress={generatePDF}>
+                      <Text>Generate Invoice</Text>    
                     </Button> 
-
-                    <Button style={styles.button} type="blue" onPress={handleNavigate}>
-                      <Text>Edit Invoice</Text>   
-                    </Button>  
               
               </View>  
               )}
@@ -776,7 +604,7 @@ if (!invoices?.Address) {
               )}
             />   
         )}
-
+ 
 
     </SafeAreaView>  
   ) 

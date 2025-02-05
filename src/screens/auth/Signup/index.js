@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   ScrollView, 
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
@@ -13,16 +14,20 @@ import Button from '../../../components/Button';
 import Checkbox from '../../../components/Checkbox';
 import Input from '../../../components/Input';
 import Title from '../../../components/Title';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { 
   PRIVACY_POLICY_LINK, 
   TERMS_CONDITIONS_LINK,
 } from '../../../constants/links';
 import styles from './styles';
+import colors from '../../../constants/colors';
+import PasswordInput from '../../../components/PasswordInput/PasswordInput';
 
 const Signup = ({navigation}) => {
   const [agreed, setAgreed] = useState(false);
   const [values, setValues] = useState({});
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const onCheckboxPress = () => {
     setAgreed(value => !value);
   };
@@ -38,9 +43,24 @@ const Signup = ({navigation}) => {
     }));
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
 
 
   const onSubmit = () => {
+    if(values?.email?.trim() === "" || values?.password?.trim() === "" || !values.email || !values.password
+  ||  values?.first_name?.trim() === "" || !values.first_name || values?.last_name?.trim() === "" || !values.last_name
+ || values?.confirm_password?.trim() === "" || !values.confirm_password
+  ) {  
+      Alert.alert('Please complete the sign up form') 
+      return;
+    }
+
     if (!values.first_name || !values.last_name) {
       Alert.alert('Please enter first name and last name');
       return;
@@ -96,19 +116,42 @@ const Signup = ({navigation}) => {
           placeholder="Email"
           keyboardType="email-address"
         />
-        <Input
-          onChangeText={val => onChange(val, 'password')}
-          placeholder="Password"
-          secureTextEntry
-        />
-        <Input
-          onChangeText={val => onChange(val, 'confirm_password')}
+ 
+
+        <View style={styles.passwordContainer}>
+      <PasswordInput 
+        placeholder="Password"
+        secureTextEntry={!showPassword} 
+        onChangeText={val => onChange(val, 'password')} 
+      />
+        <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+          <MaterialIcon
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color={colors.black}
+          /> 
+        </TouchableOpacity>
+     </View>
+
+     <View style={styles.passwordContainer}>
+      <PasswordInput 
           placeholder="Confirm Password"
-          secureTextEntry
-        />
+          secureTextEntry={!showConfirmPassword} 
+        onChangeText={val => onChange(val, 'confirm_password')}
+        showText
+      />
+        <TouchableOpacity onPress={toggleConfirmPasswordVisibility} style={styles.eyeIcon}>
+          <MaterialIcon
+            name={showConfirmPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color={colors.black}
+          /> 
+        </TouchableOpacity>
+     </View>
+
 
         <View style={styles.row}>
-          <Checkbox checked={agreed} onPress={onCheckboxPress} />
+          <Checkbox checked={agreed} onChange={onCheckboxPress} />
 
           <Text style={styles.agreeText}>
             I agree to

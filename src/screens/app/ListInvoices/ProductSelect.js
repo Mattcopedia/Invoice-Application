@@ -10,11 +10,12 @@ import {
   Text,
   Modal,
   TouchableOpacity,
-  View, 
+  View,
+  Keyboard, 
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import ImagePicker from 'react-native-image-crop-picker';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker'; 
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -29,12 +30,14 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import PlusIcon from '../../../components/PlusIcon';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
+import { takePhotoFromCamera } from '../../../constants/htmlContent';
+import { choosePhotoFromLibrary } from '../../../constants/categories';
 
 const ProductSelect = ({ route }) => {
  const navigation = useNavigation()
   const isFocused = useIsFocused();
   const user = useSelector(state => state?.invoices?.user)
-  const invoices = useSelector(state => state?.invoices?.data)
+  const invoices = useSelector(state => state?.invoices?.invoiceLatest)
 
   const images =  useSelector(state => state.invoices.images);   
   const dispatch = useDispatch(); 
@@ -63,36 +66,9 @@ const ProductSelect = ({ route }) => {
 }, [isFocused, route.params]);
 
 const handleBack = () => {
-  navigation.navigate("AllInvoices");
-};
+  navigation.navigate("AllInvoices"); 
+};  
 
-  const takePhotoFromCamera = () => {
-    ImagePicker.openCamera({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300, 
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-    }).then(image => {
-      console.log(image);
-      setImage(image.path) 
-      setModalVisible(false);
-    }); 
-  }
-
-  const choosePhotoFromLibrary = () => {
-    ImagePicker.openPicker({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,  
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',  
-    }).then(image => {
-      console.log(image);
-      setImage(image.path)
-      setModalVisible(false);
-    }); 
-  }
 
 
 
@@ -193,7 +169,7 @@ const handleBack = () => {
         dispatch(fetchProductItem(user?.uid))  
         dispatch(fetchProductSelect(user?.uid))  
         navigation.navigate('AllInvoices');  
-
+        Keyboard.dismiss();
       })
       .catch(e => {
         console.log('error when updating invoice :>> ', e);
@@ -256,7 +232,7 @@ if (!invoices?.userId ) {
         />
       </Pressable> 
            
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
       <Title type="thin">Update Product</Title> 
       <TouchableOpacity onPress={() => setModalVisible(true)}>
           <View style={styles.Photo}>
@@ -264,26 +240,34 @@ if (!invoices?.userId ) {
             <Text style={styles.labelPhoto}>Select an image</Text>  
             </ImageBackground>
             </View> 
-        </TouchableOpacity>
+        </TouchableOpacity> 
   
-        <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => {
-          setModalVisible(false);  
-        }}> 
+        <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => { setModalVisible(false); }}>
+              
+        <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalContent}>  
 
-                <View style={styles.centeredView}> 
-                  <View style={styles.modalView}>
-                    <TouchableOpacity onPress={takePhotoFromCamera} style={styles.buttonUpload}>
-                      <SimpleLineIcons size={60}  color={colors.black} name="camera" /> 
-                      <Text style={styles.textStyle}>Camera</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={choosePhotoFromLibrary} style={styles.buttonUpload}>
-                      <MaterialIcons size={60}  color={colors.black} name="photo-library" /> 
-                      <Text style={styles.textStyle}>Library</Text>  
-                    </TouchableOpacity>
-                    <AntDesign size={20} onPress={() => setModalVisible(false)}  style={styles.closeButton} color={colors.black} name="close" /> 
-                  </View>   
-                </View>   
-              </Modal>
+              <View  onPress={() => setModalVisible(false)} >
+                 <AntDesign size={20}  style={styles.closeBtn} color={colors.black} name="close" /> 
+                 </View>   
+ 
+                <View style={styles.alignIcon}>
+                <Pressable onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <SimpleLineIcons onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="camera" /> 
+                    <Text onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Camera</Text>
+                  </Pressable>
+
+                  <Pressable onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <MaterialIcons onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="photo-library" /> 
+                    <Text onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Library</Text>  
+                  </Pressable> 
+                </View> 
+                
+                </View>     
+              </Pressable>
+  
+              </Modal> 
+  
        
        {uploading ? (
         <View style={styles.status}>

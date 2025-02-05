@@ -1,6 +1,11 @@
 import {StyleSheet} from 'react-native';
 import colors from '../../../constants/colors';
 
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
+
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -23,6 +28,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
+    color: colors.black,
+    marginHorizontal: 24,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  label2: {
+    fontSize: 18,
     color: colors.black,
     marginHorizontal: 24,
     fontWeight: '500',
@@ -75,27 +87,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 23
   },
-  imageBackground: {
-    width: '85%',
-    height: 200, 
-    marginTop: 15
-  },
+ 
   imageBackgroundFlat: {
     width: '85%',
     height: 200, 
     marginTop: 15
   },
-  Photo: {
-    justifyContent: 'center', 
-    alignItems: 'center',   
-    marginLeft: 50,
-   
-  },
+
   PhotoContainer: {
    flexDirection: "row",
    flex: 1,
    alignItems: 'center',
    justifyContent: 'center',
+  },
+  PhotoContainerView: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   takePhoto: {
       backgroundColor: colors.blue,
@@ -108,28 +115,48 @@ const styles = StyleSheet.create({
     color: colors.white 
   },
   Photo: {
-    width: '120%',
+    width: width * 1,
     height: 200,
     marginBottom: 20,
     flexDirection: "row",
     alignItems: 'center',
     justifyContent: 'center',
   },
-  centeredView: {
+  PhotoView: {
+    width: width * 0.9,
+    height: 200,
+    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    width: width * 0.7,
+    padding: 10,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  }, 
+  closeBtn: {
+    paddingLeft: 200,
+    paddingTop: 5,
+    paddingLeft: width * 0.5,
+  },
+  imageBackground: {
+    width: width * 0.85,
+    height: 200, 
+    marginTop: 15
+  }, 
+  modalBackground: {
     flex: 1,
-    marginTop: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: "column",
-    backgroundColor: 'rgba(0,0,0,0.5)' 
   },
-  modalView: {
-    backgroundColor: 'white',
-  justifyContent: 'center',
-  alignItems: 'center',
-  flexDirection: "row",
-  borderRadius: 10,
-  paddingLeft: 30
+ 
+  alignIcon: {
+     display: "flex",
+    flexDirection: "row"
   },
   buttonUpload: { 
     justifyContent: 'center',
@@ -141,11 +168,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  closeButton: {
-    flexDirection: "column",
-    alignSelf: "flex-start",
-    marginRight: 15,
-    marginTop: 15,
+  statusView: {
+    height: 10,
   },
   status: {
     justifyContent: 'center',
@@ -189,6 +213,23 @@ titleProduct: {
   paddingTop: 40,
   marginRight: 30
 },
+checkbox: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  padding: 10,
+  backgroundColor:'#d3d3d3',
+  borderRadius: 5,
+  marginBottom: 5,
+},
+ textRef: {
+  color: colors.black
+ },
+ StatusContainer: {
+  marginTop: 20,
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  alignItems: 'center',
+}
 }); 
 
 export default styles;

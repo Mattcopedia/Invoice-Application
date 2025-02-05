@@ -13,7 +13,7 @@ const AllSelectedProducts = () => {
     const dispatch = useDispatch(); 
     const navigation = useNavigation();
     const user = useSelector(state => state?.invoices?.user)
-    const invoices = useSelector(state => state?.invoices?.data)
+    const invoices = useSelector(state => state?.invoices?.invoiceLatest)
     const allProduct = useSelector(state => state?.invoices?.selectedItem);
     const filteredProducts = allProduct?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
     const arrangedProducts = filteredProducts?.slice().reverse(); 

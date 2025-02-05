@@ -5,17 +5,16 @@ import styles from './styles';
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { setfilteredSelectedItem } from '../../../store/invoices';
 import Input from '../../../components/Input';
-import Checkbox from '../../../components/Checkbox';
 import Button from '../../../components/Button';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import FlatListSelect from '../../../components/FlatList/FlatListSelect';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
 
 const SelectProduct = () => { 
-    const dispatch = useDispatch();
+    const dispatch = useDispatch(); 
     const navigation = useNavigation();
     const user = useSelector(state => state?.invoices?.user);
-    const invoices = useSelector(state => state?.invoices?.data)
+    const invoices = useSelector(state => state?.invoices?.invoiceLatest)
     const allProduct = useSelector(state => state?.invoices?.allProduct); 
     const productSelect = useSelector(state => state?.invoices?.productSelect)
     const filterProductSelect = productSelect?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
@@ -25,7 +24,7 @@ const SelectProduct = () => {
     const [filteredAllInvoices, setFilteredAllInvoices] = useState(arrangedProducts);
     const [keyword, setKeyword] = useState("");
 
-    const handleBack = () => {
+    const handleBack = () => { 
         navigation.goBack(); 
     }; 
 
@@ -93,4 +92,4 @@ const SelectProduct = () => {
     );
 };
 
-export default SelectProduct;
+export default React.memo(SelectProduct);

@@ -17,7 +17,7 @@ const SelectGenProduct = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
     const user = useSelector(state => state?.invoices?.user);
-
+  
     const invoices = useSelector(state => state?.invoices?.data)
     const allProduct = useSelector(state => state?.invoices?.allProduct); 
     const productSelect = useSelector(state => state?.invoices?.productSelect)

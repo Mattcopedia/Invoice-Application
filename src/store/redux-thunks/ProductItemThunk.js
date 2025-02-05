@@ -24,4 +24,4 @@ export const fetchProductItem = createAsyncThunk(
       console.error('Error fetching product item:', error);
     }
   }
-);
+); 

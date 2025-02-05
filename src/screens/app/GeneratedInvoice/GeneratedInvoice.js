@@ -1,37 +1,41 @@
-import React,{useState, useEffect} from 'react'
-import {SafeAreaView, ImageBackground, FlatList,ScrollView} from 'react-native';
-import {  Text, View } from 'react-native'
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import React,{useState, useEffect, useCallback} from 'react'
+import {SafeAreaView, ImageBackground, FlatList,ScrollView, Modal, RefreshControl} from 'react-native';
+import {  Text} from 'react-native'
 import FileViewer from 'react-native-file-viewer';
-import { PermissionsAndroid, Platform } from 'react-native';
-import RNFS from 'react-native-fs';
-
 import { Alert } from 'react-native';  
 import { useSelector, useDispatch } from 'react-redux';
 import styles from './styles';
-import InvoiceText from '../../../components/invoiceText/invoiceText'; 
-import Button from '../../../components/Button';
+
 import Header from '../../../components/Header';
-import moment from 'moment';
-import { convertDate, formatNumberWithCommas, getName, getWelcomeName, } from '../../../constants/categories';
+import { convertDate, DuplicateInvoice, formatNumberWithCommas, GenerateInvoiceNo, getName, getWelcomeName, } from '../../../constants/categories';
 import auth from '@react-native-firebase/auth';  
 import firestore from '@react-native-firebase/firestore';
 import { setInvoiceList, setToUpdate, setUserName} from '../../../store/invoices'; 
 import { htmlStyles } from '../../../constants/styles'; 
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { fetchGeneratedInvoice } from '../../../store/redux-thunks/GeneratedInvoiceThunk'; 
+import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList';
+import { createPDF2 } from '../../../constants/helperFunctions';
+import InvoicePdf from '../../../components/InvoicePdf';
  
- 
+  
 const GeneratedInvoice = ({ route }) => {  
 const navigation = useNavigation()
   const dispatch = useDispatch(); 
   const isFocused = useIsFocused(); 
   const [count,setCount] = useState(1) 
   const user = useSelector(state => state?.invoices?.user)
-  const invoices = useSelector(state => state?.invoices?.data)
-  const allProduct = useSelector(state => state?.invoices?.GeneratedInvoice);
-  const invoiceList = useSelector(state => state?.invoices?.InvoiceList);
+  const localInvoiceList = useSelector(state => state?.invoices?.InvoiceList)
+  const [invoiceList, setLocalInvoiceList] = useState(localInvoiceList); 
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const dateFormatted = convertDate(invoiceList?.Date?.toDate())   
 
-  const dateFormatted = convertDate(invoiceList?.Date.toDate())   
+  const handleNavigateEditInvoice = () => { 
+    dispatch(setInvoiceList(invoiceList));  
+    navigation.navigate('GeneratedInvoiceEdit')
+   
+  } 
 
 
 useEffect(() => {  
@@ -44,34 +48,45 @@ useEffect(() => {
 return () => unsubscribe();
   }, [user, dispatch,isFocused]);
 
+  const fetchData = () => {
+    firestore() 
+    .collection('GeneratedInvoice')  
+    .where('userId', '==', user?.uid)
+    .get()  
+    .then(querySnapshot => {
+        const newProductItem = []; 
+        querySnapshot.forEach(documentSnapshot => {
+          newProductItem.push({
+            uid: documentSnapshot.id,
+            ...(documentSnapshot.data() || {}),
+          }); 
+        });
+       
+        const sortedGeneratedInvoice = newProductItem.sort((a, b) => b.invoiceDate - a.invoiceDate);
+        const targetInvoice = sortedGeneratedInvoice.find(invoice => invoice.uid === invoiceList.uid);
+        dispatch(setInvoiceList(targetInvoice)) 
+      setLocalInvoiceList(targetInvoice) 
+    });  
+  }
+
   useEffect(() => {
     if (isFocused) {
-      firestore() 
-      .collection('GeneratedInvoice')  
-      .where('userId', '==', user?.uid)
-      .get() 
-      .then(querySnapshot => {
-          const newProductItem = []; 
-          querySnapshot.forEach(documentSnapshot => {
-            newProductItem.push({
-              uid: documentSnapshot.id,
-              ...(documentSnapshot.data() || {}),
-            }); 
-          });
-         
-          const sortedGeneratedInvoice = newProductItem.sort((a, b) => b.invoiceDate - a.invoiceDate);
-          const targetInvoice = sortedGeneratedInvoice.find(invoice => invoice.uid === invoiceList.uid);
-          dispatch(setInvoiceList(targetInvoice));  
+      fetchData()
+    } 
+}, [isFocused,user, invoiceList, invoiceList?.uid,invoiceList?.Paid, invoiceList?.invoiceType]); 
 
-      });  
-    }
-}, [isFocused]); 
- 
+const onRefresh = useCallback(async () => {
+  setRefreshing(true);
+    fetchData();
+  setRefreshing(false); 
+}, []);
+  
 
 const createTableRows = () => {
   let counter = 1; // Initialize counter
 
-  const tableRows = invoiceList?.Product?.map((item) => { 
+
+  let tableRows1 = invoiceList?.Product?.map((item) => { 
      const formattedDescription  = `${item?.Description} <br /> <strong>(${item?.SampleCode})</strong>  `
     return `
     <tr>    
@@ -84,7 +99,7 @@ const createTableRows = () => {
     ` 
   });
 
-  return tableRows; 
+  return tableRows1; 
 };
 
 
@@ -115,14 +130,7 @@ const NoteField = () => {
   return ``
 }
 
-const CompanyName = () => {
-  if(invoiceList?.CompanyName?.trim() !== "") {
-    return `
-    ${invoiceList?.CompanyName} 
-      `
-  }
-  return ``
-}
+
 
 const VATFIELD = () => {
   if(invoiceList?.selectedVAT === "Yes") {
@@ -173,6 +181,23 @@ const InstallationField = () => {
   `
 }
 
+const TableHeader = () => {
+
+  return `
+     <tr>
+                <th>Item Sample Picture</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit Price <br/>
+                  (=₦=)
+                </th>
+                <th>Total Amount  <br/>
+                  (=₦=)
+                </th>
+            </tr> 
+  `
+}
+
 
 const displayFinalCalculations = () => {
   if(invoiceList?.invoiceType !== "TECHNICAL PROPOSAL") {
@@ -219,10 +244,10 @@ const displayFinalCalculations = () => {
     <td colspan="1" class="totalbody">AMOUNT IN WORDS:</td> 
     <td colspan="4" class="total-amount center">${invoiceList?.AmountInWords}</td>
     </tr>
-
+ 
     <tr>
     <td colspan="1" class="totalbody">VALIDITY OF QUOTE:</td> 
-    <td colspan="4" class=" left"> 3 DAYS</td>
+    <td colspan="4" class=" left"> ${invoiceList?.Validity} DAYS</td>
     </tr>
 
 
@@ -313,9 +338,11 @@ const displayFinalCalculations = () => {
             <div class="descriptionContainer borderWall">
 
               <div class="description">
-                <p>Attn: ${invoiceList?.Attention}</p>
-                <p>${CompanyName()}</p>
-                <p>LOCATION: ${invoiceList?.Address}</p>
+                    <p class="color">Attn: ${invoiceList?.Attention}</p>
+                <p class="color">${invoiceList?.CompanyName}</p>  
+                <p class="color">LOCATION: ${invoiceList?.Address}</p> 
+                 <p class="color">${invoiceList?.phoneNumber}</p> 
+
               </div>
 
               <div class="date">
@@ -329,17 +356,7 @@ const displayFinalCalculations = () => {
             <table>
 
          
-            <tr>
-                <th>Item Sample Picture</th>
-                <th>Description</th>
-                <th>Qty</th>
-                <th>Unit Price <br/>
-                  (=₦=)
-                </th>
-                <th>Total Amount  <br/>
-                  (=₦=)
-                </th>
-            </tr> 
+             ${TableHeader()}  
       
 
               <tbody>
@@ -364,81 +381,11 @@ const displayFinalCalculations = () => {
 `;
 
 
-
-const createPDF = async () => {
-
-  const sanitizeFileName = (name) => {
-    return name.replace(/[^a-zA-Z0-9]/g, ' '); 
-  };
-
-  const generateUniqueFileName = async (baseName, folderPath) => {
-    const maxRetries = 100; 
-    let retryCount = 0;
-    let fileName;
-    let filePath;
+const generatePDF = () => {
+  createPDF2(invoiceList,htmlContent,count,setCount,false)
+}
   
-    while (retryCount < maxRetries) {
-      const randomNumber = Math.floor(Math.random() * 20) + 1;
-      fileName = `${baseName}(${randomNumber}).pdf`;
-      filePath = `${folderPath}/${fileName}`;
   
-      if (!(await RNFS.exists(filePath))) {
-        return fileName;
-      }
-      
-      retryCount++;
-    }
-    Alert.alert("Unable to generate a unique file name after multiple attempts")
-    throw new Error('Unable to generate a unique file name after multiple attempts');
-  };
-   
-
-  const baseName = `${sanitizeFileName(invoiceList?.invoiceType)}_${sanitizeFileName(invoiceList?.CompanyName)}(${count})`;
- 
-  try {
-  let options = {  
-    html: htmlContent,    
-    fileName: baseName,        
-    base64: true 
-  };  
-
-  const pdf = await RNHTMLtoPDF.convert(options); 
-
-  if (pdf.base64) {
-    const folderPath = Platform.OS === 'android' 
-    ? `${RNFS.DownloadDirectoryPath}/Cristo Invoice`
-    : `${RNFS.DocumentDirectoryPath}/Cristo Invoice`;
-
-    const folderExists = await RNFS.exists(folderPath);
-    if (!folderExists) {
-      await RNFS.mkdir(folderPath);
-    }
-    const uniqueFileName = await generateUniqueFileName(baseName, folderPath);
-
-    const filePath = `${folderPath}/${uniqueFileName}`; 
-
-    console.log("Saving PDF at:", filePath); 
-    await RNFS.writeFile(filePath, pdf.base64, 'base64');
-    console.log('PDF saved at:', filePath);
-
-
-      Alert.alert('Success', `PDF saved at: /internal storage/Download/Cristo Invoice/${uniqueFileName}`, [ 
-          {text: "Cancel", style: "cancel"},
-          {text: "Open", onPress: () => openFile(filePath)}
-      ], {cancelable: true});
-  
-      setCount(count + 1); 
-    } 
-
-  } catch (error) {
-      console.error('Error generating PDF:', error);
-      Alert.alert('Error', 'Failed to create PDF. Please try again.');
-  }
-
-  } 
-
-
- 
  
  const openFile = async (filepath) => {
   const path = filepath; 
@@ -453,7 +400,7 @@ const createPDF = async () => {
 const item2 = invoiceList
 
 const handleDelete = async () => {
-  try {
+  try { 
  await firestore()
   .collection('GeneratedInvoice') 
   .doc(item2?.uid) 
@@ -467,197 +414,27 @@ const handleDelete = async () => {
   } catch (error) {
       console.error("Error deleting product: ", error);
   }
-};
+}; 
+ 
+const DuplicateInvoice2 = async (invoiceList) => {
+   DuplicateInvoice(invoiceList)
+  navigation.navigate("GeneratedInvoiceList")    
+}  
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} >
          <Header title={`${invoiceList?.Attention} Invoice`}   />  
-         <Text style={styles.invoiceText2}>Welcome, {getWelcomeName()} </Text>
-                <FlatList
-             data={invoiceList?.Product} 
-             keyExtractor={(item, index) => index.toString()}
-          ListHeaderComponent={() => (
-            <View style={[styles.padLeft, styles.stickyHeader]}>
-            <Text style={styles.titleProduct}>Product Details</Text>
-          </View> 
-          )}
-          ListFooterComponent={() => ( 
-             <>
-             <Button style={styles.button1} type="blue" onPress={() => navigation.navigate('GeneratedAddProduct', {item2})}>
-                  <Text>Add Product</Text>   
-                </Button> 
-
-            <View style={styles.container}>   
-            <Text style={styles.titleProduct}>Invoice Details</Text>
- 
-            <Text style={styles.invoiceText}>Date</Text>
-           <InvoiceText>
-              {dateFormatted} 
-           </InvoiceText>
- 
-           <Text style={styles.invoiceText}>Invoice No</Text>
-           <InvoiceText>
-              {invoiceList?.invoiceNo}
-           </InvoiceText> 
- 
-           <Text style={styles.invoiceText}>Invoice Type</Text>
-           <InvoiceText>
-              {invoiceList?.invoiceType}
-           </InvoiceText>
- 
-           {invoiceList?.CompanyName?.trim() !== "" && (
-             <View>
-            <Text style={styles?.invoiceText}>Company name</Text>
-            <InvoiceText>
-            {invoiceList?.CompanyName}
-            </InvoiceText> 
-            </View>
-           ) 
-           }
- 
-           <Text style={styles.invoiceText}>Attention</Text>
-           <InvoiceText>
-              {invoiceList?.Attention}
-           </InvoiceText>
-         
-           <Text style={styles.invoiceText}>Address</Text>
-           <InvoiceText>
-              {invoiceList?.Address}
-           </InvoiceText>
-
-           {invoiceList?.invoiceType !== "TECHNICAL PROPOSAL" && (
-            <>
-               <Text style={styles.invoiceText}>Payment Terms</Text>
-           <InvoiceText>
-              {invoiceList?.selectedPaymentPlan}
-           </InvoiceText>
-         
-           <Text style={styles.invoiceText}>Warranty</Text>
-           <InvoiceText>
-              {invoiceList?.selectedWarranty} 
-           </InvoiceText>
- 
-           <Text style={styles?.invoiceText}>SubTotal</Text>
-           <InvoiceText>  
-           ₦{invoiceList?.subTotal}
-           </InvoiceText> 
- 
-         
-           {invoiceList?.Discount.trim() !== "" && (
-                  <View>
-
-                <Text style={styles?.invoiceText}>DISCOUNT</Text>
-                {invoiceList?.Discount.trim() !== "0" ? (  
-                  <InvoiceText>
-                {invoiceList?.Discount}%
-                </InvoiceText> ) :
-               (  <InvoiceText>  
-                     N/A
-                </InvoiceText> )
-                }  
- 
-                </View>
-                ) 
-                }
-
-                <Text style={styles?.invoiceText}>Installation</Text>
-
-                {invoiceList?.Installation.trim() !== "0" ? (  
-                  <InvoiceText>
-                ₦{invoiceList?.Installation}
-                </InvoiceText> ) : 
-              (  <InvoiceText>
-                     FREE
-                </InvoiceText> )
-                } 
-
-                <Text style={styles?.invoiceText}>Transportation</Text>
-                {invoiceList?.Transportation.trim() !== "0" ? (  
-                  <InvoiceText>
-                ₦{invoiceList?.Transportation}
-                </InvoiceText> ) :
-               (  <InvoiceText>
-                     FREE
-                </InvoiceText> )
-                }  
-
        
-           <Text style={styles?.invoiceText}>Delivery Period</Text>
-           <InvoiceText>
-            {invoiceList?.DeliveryPeriod} DAYS
-           </InvoiceText> 
- 
-           <Text style={styles?.invoiceText}>Validity of Quote</Text>
-           <InvoiceText>
-             5 DAYS
-           </InvoiceText> 
+     
 
-           {invoiceList?.Note?.trim() !== "" && (
-             <View>
-            <Text style={styles?.invoiceText}>Note</Text>
-            <InvoiceText>
-            {invoiceList?.Note} 
-            </InvoiceText> 
-            </View>
-           ) 
-           }
-          
-            </>
-  )}
- 
- 
-        
-           <Button style={styles.button} type="blue" onPress={() => createPDF()}>
-                  <Text>View Invoice</Text>   
-                </Button> 
- 
-                <Button style={styles.button} type="blue" onPress={() => navigation.navigate('GeneratedInvoiceEdit', { item2 })}>
-                  <Text>Edit Invoice</Text>   
-                </Button>   
+         <Text style={styles.invoiceText2}>Welcome, {getWelcomeName()} </Text>
 
-          <Button style={styles.button} del="red"  onPress={handleDelete}> 
-            <Text>Delete</Text> 
-          </Button> 
-
-          </View> 
-          </> 
-          )}
-          renderItem={({ item, index }) => (
-            <View style={styles.containerProduct}>   
-        <View style={styles.Photo}>  
-       <ImageBackground source={{ uri:item?.ImageUri }} style={styles.imageBackgroundFlat}>
-       </ImageBackground> 
-       </View> 
-              
-              <Text style={styles.invoiceText}>Description</Text>
-        <InvoiceText>
-          {item?.completeDescription}
-        </InvoiceText> 
-    
-    
-        <Text style={styles.invoiceText}>Quantity</Text>
-        <InvoiceText>
-          {item?.Quantity}
-        </InvoiceText>
-          
-        <Text style={styles?.invoiceText}>Unit Price</Text>
-        <InvoiceText>
-        ₦{item?.UnitPrice}
-        </InvoiceText> 
-
-        <Text style={styles?.invoiceText}>Amount</Text>
-        <InvoiceText>
-        ₦{item?.Amount}
-        </InvoiceText> 
-        <Button style={styles.button} type="blue" onPress={() => navigation.navigate('GeneratedProductEdit', { item,item2})}>
-                  <Text>Edit Product</Text>   
-                </Button> 
-
-            </View>
-          )}
-        />   
-
+           <InvoicePdf invoiceList={invoiceList} item2={item2} DuplicateInvoice2={DuplicateInvoice2}
+           handleNavigateEditInvoice={handleNavigateEditInvoice} generatePDF={generatePDF}
+            handleDelete={handleDelete} refreshing={refreshing} onRefresh={onRefresh}
+            dateFormatted={dateFormatted}/> 
+  
 
     </SafeAreaView>  
   ) 

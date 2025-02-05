@@ -9,7 +9,7 @@ const Checkbox = ({checked,onChange}) => {
       style={[styles.container, checked ? styles.checkedBox : {}]}>
       {checked ? <View style={styles.innerSquare} /> : null}
     </Pressable>
-  );
+  );  
 };
 
 export default React.memo(Checkbox);

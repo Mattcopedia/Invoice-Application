@@ -10,14 +10,17 @@ import Title from '../../../components/Title';
 import styles from './styles';  
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/AntDesign';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import colors from '../../../constants/colors';
 import { useDispatch } from 'react-redux';
 import { setGoogleUser } from '../../../store/invoices';
+import PasswordInput from '../../../components/PasswordInput/PasswordInput';
  
 const Signin = () => { 
   const navigation = useNavigation();  
   const dispatch = useDispatch(); 
   const [values, setValues] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -55,6 +58,7 @@ const Signin = () => {
 
   
 async function onFacebookButtonPress() {
+
   // Attempt login with permissions
   const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
 
@@ -79,8 +83,17 @@ async function onFacebookButtonPress() {
 }
 
 
+const togglePasswordVisibility = () => {
+  setShowPassword(!showPassword);
+};
+
 
   const onSubmit = () => { 
+    if(values?.email?.trim() === "" || values?.password?.trim() === "" || !values.email || !values.password) {
+      Alert.alert('Please complete the login form');
+      return;
+    }
+
     auth()
       .signInWithEmailAndPassword(values.email, values.password)
       .then(() => {
@@ -110,12 +123,21 @@ async function onFacebookButtonPress() {
         keyboardType="email-address"
         onChangeText={val => onChange(val, 'email')}
       />
-      <Input
+     
+     <View style={styles.passwordContainer}>
+      <PasswordInput 
         placeholder="Password"
-        secureTextEntry
+        secureTextEntry={!showPassword} 
         onChangeText={val => onChange(val, 'password')} 
       />
-
+        <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+          <MaterialIcon
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color={colors.black}
+          /> 
+        </TouchableOpacity>
+     </View>
       <Button onPress={onSubmit}>Login</Button>
 
 

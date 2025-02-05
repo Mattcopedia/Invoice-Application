@@ -10,7 +10,8 @@ import {
   Text,
   Modal,
   TouchableOpacity,
-  View, 
+  View,
+  Keyboard, 
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
@@ -18,6 +19,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker'; 
 import Button from '../../../components/Button'; 
 import Input from '../../../components/Input';
 import styles from './styles';
@@ -27,14 +29,14 @@ import colors from '../../../constants/colors';
 import Title from '../../../components/Title'; 
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import PlusIcon from '../../../components/PlusIcon';
+import { takePhotoFromCamera } from '../../../constants/htmlContent';
+import { choosePhotoFromLibrary } from '../../../constants/htmlContent';
 
 const GeneratedProductEdit = ({ route }) => {
- const navigation = useNavigation()
+ const navigation = useNavigation() 
   const isFocused = useIsFocused();
   const imagePath = "https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg"
   const user = useSelector(state => state?.invoices?.user)
-
-  const images =  useSelector(state => state.invoices.images);   
   const dispatch = useDispatch(); 
   const [Description, setDescription] = useState(route.params.item?.Description);
   const [Amount, setAmount] = useState(route.params.item?.Amount);
@@ -43,12 +45,14 @@ const GeneratedProductEdit = ({ route }) => {
   const [SampleCode, setSampleCode] = useState(route.params.item?.SampleCode);
   const [loading, setLoading] = useState(false);
   const [errorLoading,SetErrorLoading] = useState(false)
-  const [image, setImage] = useState(route.params.item?.ImageUri)    
+  const [image, setImage] = useState(route.params.item?.ImageUri)  
+  const images = route.params.item?.ImageUri  
   const [modalVisible, setModalVisible] = useState(false);  
   const [uploading, setUploading] = useState(false);
   const [transferred, setTransferred] = useState(0)
   const [uploaded,setUploaded] = useState(false)  
- 
+  const invoiceType =  route.params.item2.invoiceType 
+
 
   useEffect(() => {
     const calculateAmount = () => {
@@ -76,39 +80,6 @@ const handleBack = () => {
   navigation.navigate("GeneratedInvoice") 
 }; 
 
-  const takePhotoFromCamera = () => {
-    ImagePicker.openCamera({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true, 
-    }).then(image => {
-      console.log(image);
-      setImage(image.path) 
-      setModalVisible(false);
-    }); 
-  }
-
-  const choosePhotoFromLibrary = () => {
-    ImagePicker.openPicker({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true,   
-    }).then(image => {
-      console.log(image);
-      setImage(image.path)
-      setModalVisible(false);
-    }); 
-  }
 
 console.log("Id",route.params.item2?.uid) 
 
@@ -117,6 +88,11 @@ console.log("Id",route.params.item2?.uid)
       Alert.alert( "Please select an image")   
       return;  
     }
+    if (uploaded) {
+      Alert.alert("Image is already uploaded");
+      return;
+    }
+    
     const uploadUri = image;
     let filename = uploadUri.substring(uploadUri.lastIndexOf("/") + 1);
     
@@ -158,7 +134,8 @@ console.log("Id",route.params.item2?.uid)
       SetErrorLoading(true)
       return;   
     }
-
+ 
+ 
     SetErrorLoading(true)
     setLoading(true);
 
@@ -209,15 +186,15 @@ const products = invoiceDoc.data().Product;
         dispatch(setToUpdate());  
         Alert.alert('Data updated successfully');  
         setLoading(false);  
-        navigation.navigate('GeneratedInvoiceEdit'); 
+        navigation.navigate('GeneratedInvoice'); 
+        Keyboard.dismiss();
       })
       .catch(e => {
         console.log('error when updating invoice :>> ', e);
         setLoading(false);  
-        SetErrorLoading(false)
+        SetErrorLoading(false) 
         Alert.alert(e.message);   
       });
-
   }; 
 
 
@@ -232,14 +209,13 @@ const products = invoiceDoc.data().Product;
     );
     
     console.log("UpdatedProducts",updatedProducts) 
-    
+     
     docRef.update({ Product: updatedProducts })  
       .then(() => { 
             console.log("Product Deleted!")
-            dispatch(setToUpdate());
-            navigation.navigate('GeneratedInvoiceEdit'); 
+            dispatch(setToUpdate()); 
+            navigation.navigate('GeneratedInvoice'); 
           }); 
-
 }    
 
   return (
@@ -252,7 +228,7 @@ const products = invoiceDoc.data().Product;
         />
       </Pressable> 
            
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
       <Title type="thin">Update Product</Title> 
       <TouchableOpacity onPress={() => setModalVisible(true)}>
           <View style={styles.Photo}>
@@ -262,24 +238,32 @@ const products = invoiceDoc.data().Product;
             </View> 
         </TouchableOpacity>
   
-        <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => {
-          setModalVisible(false);  
-        }}> 
+        <Modal animationType="fade" transparent={true} visible={modalVisible } onRequestClose={() => { setModalVisible(false); }}>
+               
+        <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalContent}>  
 
-                <View style={styles.centeredView}> 
-                  <View style={styles.modalView}>
-                    <TouchableOpacity onPress={takePhotoFromCamera} style={styles.buttonUpload}>
-                      <SimpleLineIcons size={60}  color={colors.black} name="camera" /> 
-                      <Text style={styles.textStyle}>Camera</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={choosePhotoFromLibrary} style={styles.buttonUpload}>
-                      <MaterialIcons size={60}  color={colors.black} name="photo-library" /> 
-                      <Text style={styles.textStyle}>Library</Text>  
-                    </TouchableOpacity>
-                    <AntDesign size={20} onPress={() => setModalVisible(false)}  style={styles.closeButton} color={colors.black} name="close" /> 
-                  </View>   
-                </View>   
-              </Modal>
+              <View  onPress={() => setModalVisible(false)} >
+                 <AntDesign size={20}  style={styles.closeBtn} color={colors.black} name="close" /> 
+                 </View>   
+ 
+                <View style={styles.alignIcon}>
+                <Pressable onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <SimpleLineIcons onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="camera" /> 
+                    <Text onPress={() => takePhotoFromCamera(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Camera</Text>
+                  </Pressable>
+
+                  <Pressable onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.buttonUpload}>
+                    <MaterialIcons onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} size={60}  color={colors.black} name="photo-library" /> 
+                    <Text onPress={() => choosePhotoFromLibrary(setImage,setModalVisible,setUploaded)} style={styles.textStyle}>Library</Text>  
+                  </Pressable> 
+                </View> 
+                 
+                </View>     
+              </Pressable>
+  
+              </Modal> 
+  
        
        {uploading ? (
         <View style={styles.status}>
@@ -337,10 +321,11 @@ const products = invoiceDoc.data().Product;
         />
           {(!UnitPrice || UnitPrice?.trim() === "") && errorLoading ? <Text style={styles.errorText}>Unit price is required</Text> : null}
 
-<Text style={styles.label}>Amount</Text>
-<Text style={styles.labelAmount}>{Amount}</Text> 
+                        <View>
+                        <Text style={styles.label}>Amount</Text>
+                        <Text style={styles.labelAmount}>{Amount}</Text> 
+                        </View> 
    
-
 
         {loading ? (
           <ActivityIndicator /> 

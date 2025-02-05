@@ -20,6 +20,8 @@ const getStyles = type =>
       fontWeight: '500',
       color: type === 'error' ? colors.red : colors.blue,
       marginBottom: 8,
+      textAlign: 'right'
+
     },
   });
 

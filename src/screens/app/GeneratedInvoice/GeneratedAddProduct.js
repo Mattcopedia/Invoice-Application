@@ -13,11 +13,13 @@ import {
   Text,
   Modal,
   TouchableOpacity,
-  View,  
+  View,
+  Keyboard,  
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import ImagePicker from 'react-native-image-crop-picker';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker'; 
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -27,9 +29,10 @@ import styles from './styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSpecificInvoice, setToUpdate } from '../../../store/invoices';
 import colors from '../../../constants/colors';
-import Title from '../../../components/Title';
+import Title from '../../../components/Title'; 
 import { useNavigation } from '@react-navigation/native';
-
+import { choosePhotoFromLibrary, takePhotoFromCamera, uploadImage } from '../../../constants/categories';
+ 
 const GeneratedAddProduct = ({ route }) => { 
   const imagePath = "https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg"
   const dispatch = useDispatch();
@@ -38,10 +41,11 @@ const GeneratedAddProduct = ({ route }) => {
   const invoice  = useSelector(state => state?.invoices?.data);   
   const [errorLoading, setErrorLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false); 
-  const [transferred, setTransferred] = useState(0);
-  const invoiceCreated = useSelector(state => state.invoices.invoiceCreated);
+  const [transferred, setTransferred] = useState(0); 
+  const invoiceCreated = useSelector(state => state.invoices.invoiceCreated); 
   const user = useSelector(state => state?.invoices?.user)
   const invoices = useSelector(state => state?.invoices?.data)  
+  const invoiceType =  route.params.item2.invoiceType
    const navigation = useNavigation()
 
   useEffect(() => {
@@ -93,112 +97,13 @@ const GeneratedAddProduct = ({ route }) => {
 
 
 
-  const takePhotoFromCamera = (index) => {
-    ImagePicker.openCamera({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true, 
-    }).then(image => {
-      console.log(image);
-      handleProductItemChange(index, 'ImageUri', image.path);
-      setModalVisible(false);
-      setProductItems(prevItems => {
-        const updatedItems = [...prevItems];
-        updatedItems[index] = { ...updatedItems[index], uploaded: false,uploading: false };
-        console.log("UpdatedItems:", updatedItems)
-        return updatedItems;
-      });
-    }); 
 
-  }
-
-  const choosePhotoFromLibrary = (index) => {
-    ImagePicker.openPicker({
-      compressImageMaxWidth: 300,
-      compressImageMaxHeight: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-      sortOrder: 'desc', 
-      includeExif: true,
-      forceJpg: true, 
-    }).then(image => {
-      console.log(image);
-      handleProductItemChange(index, 'ImageUri', image.path);
-      setModalVisible(false);
-      setProductItems(prevItems => {
-        const updatedItems = [...prevItems];
-        updatedItems[index] = { ...updatedItems[index], uploaded: false,uploading:false };
-        console.log("UpdatedItems:", updatedItems)
-        return updatedItems;
-      });
-    }); 
-  
-
-  }
+  const HandleUploadImage = async (index) => {
+    uploadImage(index, productItems, user, setProductItems, handleProductItemChange, setTransferred,imagePath)
+  } 
 
 
-  // Function to handle image upload
-  const uploadImage = async (index) => {
-    if (!productItems[index].ImageUri || productItems[index].ImageUri === imagePath) {
-      Alert.alert("Please select an image");
-      return; 
-    }
-  
-    const uploadUri = productItems[index].ImageUri;
-    let filename = uploadUri.substring(uploadUri.lastIndexOf("/") + 1);
-    const extension = filename.split(".").pop();
-    const name = filename.split(".").slice(0,-1).join(".");
-    filename = name + Date.now() + "." + extension;
-  
-     // Check if the image is already uploaded
-  if (productItems[index].uploaded) {
-    // Image is already uploaded, no need to upload again
-    Alert.alert("Image is already uploaded");
-    return;
-  }
 
-    handleProductItemChange(index, 'uploading', true);
-    setTransferred(0);
-    const directory = user?.uid;
-    const task = storage().ref(`${directory}/images/${filename}`).putFile(uploadUri);
-  
-    task.on('state_changed', taskSnapshot => {
-      console.log(`${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`);
-      setTransferred(Math.round(taskSnapshot.bytesTransferred/taskSnapshot.totalBytes) * 100);
-    });
-  
-    try {
-      await task;
-      Alert.alert(
-        "Image Uploaded",
-        "Image Uploaded to the Cloud Successfully"
-      );
-    // Set a timeout to wait for the state update
-
-    } catch(e) {
-      console.log(e);
-    }
-  
-    const downloadURL = await storage().ref(`${directory}/images/${filename}`).getDownloadURL();
-    handleProductItemChange(index, 'ImageUri', downloadURL);
-
-      // Update the uploaded state after the task completes
-      task.then(() => {
-        setProductItems(prevItems => {
-          const updatedItems = [...prevItems];
-          updatedItems[index] = { ...updatedItems[index], uploaded: true };
-          console.log("UpdatedItems:", updatedItems)
-          return updatedItems;
-        });
-      });
-
-  };
 
   const item3 = route.params.item2
 
@@ -259,8 +164,8 @@ const GeneratedAddProduct = ({ route }) => {
         Alert.alert('All product items added successfully');
         setLoading(false);
         dispatch(setToUpdate());
-        setProductItems([{ ImageUri: imagePath, Description: '', Quantity: '', UnitPrice: '', Amount: '', uploaded: false, uploading: false }]);
         navigation.navigate('GeneratedInvoiceEdit'); 
+        Keyboard.dismiss(); 
       }catch (error) {
       console.log('Error when adding product items:', error.message);
       setLoading(false);
@@ -281,7 +186,7 @@ const GeneratedAddProduct = ({ route }) => {
       </Pressable> 
       <Title type="thin">Add a New Product</Title>
 
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
         {productItems.map((item, index) => (
           <View key={index}>
           <Text style={styles.label}>Product Item {index+1}</Text>
@@ -290,24 +195,35 @@ const GeneratedAddProduct = ({ route }) => {
                 <ImageBackground source={{ uri: item.ImageUri }} style={styles.imageBackground}>
                   <Text style={styles.labelPhoto}>Select an image</Text>  
                 </ImageBackground>
-              </View> 
+              </View>  
             </TouchableOpacity>
 
             <Modal animationType="fade" transparent={true} visible={modalVisible  === index} onRequestClose={() => { setModalVisible(false); }}>
-              <View style={styles.centeredView}> 
-                <View style={styles.modalView}>
-                  <TouchableOpacity onPress={() => takePhotoFromCamera(index)} style={styles.buttonUpload}>
-                    <SimpleLineIcons size={60}  color={colors.black} name="camera" /> 
-                    <Text style={styles.textStyle}>Camera</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => choosePhotoFromLibrary(index)} style={styles.buttonUpload}>
-                    <MaterialIcons size={60}  color={colors.black} name="photo-library" /> 
-                    <Text style={styles.textStyle}>Library</Text>  
-                  </TouchableOpacity>
-                  <AntDesign size={20} onPress={() => setModalVisible(false)}  style={styles.closeButton} color={colors.black} name="close" /> 
-                </View>   
-              </View>   
-            </Modal>
+              
+            <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalContent}>  
+
+              <View  onPress={() => setModalVisible(false)} >
+                 <AntDesign size={20}  style={styles.closeBtn} color={colors.black} name="close" /> 
+                 </View>   
+  
+                <View style={styles.alignIcon}>
+                <Pressable onPress={() => takePhotoFromCamera(index,setProductItems,setModalVisible)} style={styles.buttonUpload}>
+                    <SimpleLineIcons onPress={() => takePhotoFromCamera(index,setProductItems,setModalVisible)} size={60}  color={colors.black} name="camera" /> 
+                    <Text onPress={() => takePhotoFromCamera(index,setProductItems,setModalVisible)} style={styles.textStyle}>Camera</Text>
+                  </Pressable>
+
+                  <Pressable onPress={() => choosePhotoFromLibrary(index,setProductItems,setModalVisible)} style={styles.buttonUpload}>
+                    <MaterialIcons onPress={() => choosePhotoFromLibrary(index,setProductItems,setModalVisible)} size={60}  color={colors.black} name="photo-library" /> 
+                    <Text onPress={() => choosePhotoFromLibrary(index,setProductItems,setModalVisible)} style={styles.textStyle}>Library</Text>  
+                  </Pressable>  
+                </View> 
+                 
+                </View>     
+              </Pressable>
+  
+              </Modal> 
+  
 
             <View style={styles.PhotoContainer}>
               {item.uploading ? (
@@ -316,7 +232,7 @@ const GeneratedAddProduct = ({ route }) => {
                   <ActivityIndicator size="large" color="#0000ff" /> 
                 </View> 
               ) : (    
-                <TouchableOpacity onPress={() => uploadImage(index)} style={styles.takePhoto}>
+                <TouchableOpacity onPress={() => HandleUploadImage(index)} style={styles.takePhoto}>
                   <Text style={styles.textPhoto}> Upload Image</Text>  
                 </TouchableOpacity>      
               )}
@@ -359,9 +275,12 @@ const GeneratedAddProduct = ({ route }) => {
               placeholder="N500" 
               keyboardType="numeric"
             />
-
-            <Text style={styles.label}>Amount</Text>
-            <Text style={styles.labelAmount}>{item.Amount}</Text> 
+              {invoiceType !== "REFURBISHMENT" && (
+                        <View>
+                        <Text style={styles.label}>Amount</Text>
+                        <Text style={styles.labelAmount}>{item?.Amount}</Text> 
+                        </View> 
+                      ) }
            
            {productItems.length > 1 && (
              <Button style={styles.button}  del="red" onPress={() => deleteProductItem(index)}>

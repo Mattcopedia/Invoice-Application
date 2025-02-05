@@ -7,17 +7,18 @@ export const fetchGeneratedInvoice = createAsyncThunk("GeneratedInvoice/fetchGen
             const invoicesSnapshot = await  firestore() 
             .collection('GeneratedInvoice')  
             .where('userId', '==', userId)
-            .get() 
-  
+            .orderBy('createdAt', 'desc') 
+            .get()  
+   
             const newInvoices = [];
-            invoicesSnapshot.forEach(documentSnapshot => {
+            invoicesSnapshot.forEach(documentSnapshot => { 
               newInvoices.push({
                 uid: documentSnapshot.id,
                 ...(documentSnapshot.data() || {}),
               });
             });
       
-            const sortedInvoices = newInvoices.sort((a, b) => b.invoiceDate - a.invoiceDate);
+            const sortedInvoices = newInvoices
             return sortedInvoices 
           } catch (error) {
             console.error('Error fetching data:', error);

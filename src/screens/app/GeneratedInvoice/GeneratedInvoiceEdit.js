@@ -12,7 +12,8 @@ import {
   Modal,
   TouchableOpacity,
   View,
-  KeyboardAvoidingView,  
+  KeyboardAvoidingView,
+  Keyboard,  
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { Picker } from '@react-native-picker/picker';  
@@ -29,8 +30,7 @@ import DateInput from '../../../components/DateInput';
 const GenerateInvoiceEdit = ({ route }) => { 
   const navigation = useNavigation()
   const user = useSelector(state => state?.invoices?.user)
-  const invoiceList = useSelector(state => state?.invoices?.InvoiceList);
-
+  const invoiceList = useSelector(state => state?.invoices?.InvoiceList); 
   const dispatch = useDispatch(); 
   const isFocused = useIsFocused();
   const [Installation,setInstallation] = useState(invoiceList?.Installation)
@@ -40,16 +40,23 @@ const GenerateInvoiceEdit = ({ route }) => {
   const [selectedWarranty, setSelectedWarranty] = useState(invoiceList?.selectedWarranty);
   const [selectedPaymentPlan, setSelectedPaymentPlan] = useState(invoiceList?.selectedPaymentPlan);
   const [selectedVAT, setSelectedVAT] = useState(invoiceList?.selectedVAT) 
+  const [phoneNumber, setphoneNumber] = useState(invoiceList?.phoneNumber); 
+  const [Email, setEmail] = useState(invoiceList?.Email); 
   const [DeliveryPeriod,setDeliveryPeriod] = useState(invoiceList?.DeliveryPeriod) 
+   const [Validity,setValidity] = useState(invoiceList?.Validity) 
   const [Note,setNote] = useState(invoiceList?.Note)
   const [loading, setLoading] = useState(false);
   const [errorLoading,SetErrorLoading] = useState(false) 
   const [Companyname, setCompanyname] = useState(invoiceList?.CompanyName);
   const [Address, setAddress] = useState(invoiceList?.Address);
-  const [invoiceDate, setInvoiceDate] =  useState(invoiceList?.Date.toDate()); 
-  const [invoiceType, setInvoiceType] = useState(invoiceList?.invoiceType);
+  const [invoiceDate, setInvoiceDate] =  useState(invoiceList?.Date?.toDate()); 
+  const [invoiceType, setInvoiceType] = useState(invoiceList?.invoiceType); 
   const [Attention, setAttention] = useState(invoiceList?.Attention);   
+  const [Paid, setPaid] = useState(invoiceList?.Paid); 
+  const [refurbishment, setRefurbishment] = useState('Mat/Velvet Fabric')
+ 
 
+  console.log(`invoiceList`,invoiceList) 
 
  let subTotal = Math.ceil(calculateTotalAmount(invoiceList?.Product))  
 
@@ -70,8 +77,10 @@ const GenerateInvoiceEdit = ({ route }) => {
         setInvoiceType(invoiceList?.invoiceType)
         setAttention(invoiceList?.Attention)  
         setDiscount(invoiceList?.Discount)
-
-        subTotal = Math.ceil(calculateTotalAmount(invoiceList?.Product))  
+        setphoneNumber(invoiceList?.phoneNumber)
+        setValidity(invoiceList?.Validity)
+        setEmail(invoiceList?.Email) 
+        subTotal = Math.ceil(calculateTotalAmount(invoiceList?.Product))   
     }
 }, [isFocused, route.params]);
 
@@ -86,12 +95,12 @@ useEffect(() => {
   }, [Discount]);
 
   
-const discount =  Discount.trim() !== "" ? subTotal * (parseFloat(Discount) / 100) : 0
+const discount =  Discount?.trim() !== "" ? subTotal * (parseFloat(Discount) / 100) : 0
 
 let sumTotal = ( parseFloat(subTotal) + parseFloat(Transportation || 0) +  
 parseFloat(Installation|| 0));
 
-if (Discount.trim() !== "" || !isNaN(Discount)) {   
+if (Discount?.trim() !== "" || !isNaN(Discount)) {   
    sumTotal -= discount 
 } 
 
@@ -137,15 +146,22 @@ const AmountInWords = numberToWords(GrandTotal)
     setSelectedWarranty(value);
   };
 
+  const handleRefurbishment = (value) => {
+    setRefurbishment(value)
+  }
+
   const handlePaymentPlan = (value) => {
     setSelectedPaymentPlan(value);
   };
 
+  const handlePaid = (value) => {
+    setPaid(value) 
+  }
   const handleInvoice = (value) => {
     setInvoiceType(value);
   };
 
-  const handleVAT = (value) => {
+  const handleVAT = (value) => { 
     setSelectedVAT(value);
   };
   
@@ -156,8 +172,9 @@ const AmountInWords = numberToWords(GrandTotal)
         
       if (!selectedWarranty || !selectedPaymentPlan || !Transportation || !DeliveryPeriod ||
         selectedWarranty?.trim() === '' || selectedPaymentPlan?.trim() === '' || 
-        Transportation?.trim() === '' || DeliveryPeriod?.trim() === '' || 
+        Transportation?.trim() === '' || DeliveryPeriod?.trim() === '' ||  !Validity ||  Validity.trim() === '' ||
          !Address ||!Attention ||Attention?.trim() === "" || Address?.trim() === "") {
+ 
           SetErrorLoading(true);
       Alert.alert('Please complete the invoice form');
       return;    
@@ -181,14 +198,16 @@ const AmountInWords = numberToWords(GrandTotal)
     firestore()
     .collection('GeneratedInvoice') 
     .doc(invoiceList?.uid)  
-    .update({  
+    .update({   
       Discount: Discount,
       Installation: Installation,
       Transportation: Transportation, 
       selectedPaymentPlan:selectedPaymentPlan,
       selectedWarranty:selectedWarranty,
-      DeliveryPeriod:DeliveryPeriod,
-      selectedVAT: selectedVAT,  
+      Validity:Validity,
+      selectedVAT: selectedVAT, 
+      phoneNumber:phoneNumber,  
+      Email:Email,   
       Note: Note,
       CompanyName:Companyname, 
       Address:Address,  
@@ -201,13 +220,15 @@ const AmountInWords = numberToWords(GrandTotal)
       discountValue:discount,
       AmountInWords:AmountInWords,  
       GrandTotal:GrandTotal,
+      Paid: Paid
     })  
       .then(() => {  
         dispatch(setToUpdate()); 
         Alert.alert('Data updated successfully'); 
         setLoading(false);  
         navigation.navigate('GeneratedInvoice'); 
-        dispatch(setInvoiceList(invoiceList));       
+        dispatch(setInvoiceList((prevInvoiceList) => ({ ...prevInvoiceList, Paid, invoiceType})));  
+        Keyboard.dismiss();   
       })
       .catch(e => {
         console.log('error when updating invoice :>> ', e);
@@ -229,7 +250,7 @@ const AmountInWords = numberToWords(GrandTotal)
         />
       </Pressable> 
 
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
       <Title type="thin">Update Invoice</Title>  
 
       <Text style={styles.label}>Invoice Type</Text>
@@ -243,6 +264,7 @@ const AmountInWords = numberToWords(GrandTotal)
         <Picker.Item label="TECHNICAL PROPOSAL" value="TECHNICAL PROPOSAL"/>  
       </Picker> 
       </View>  
+
 
 
       <Text style={styles.label}>Company name</Text>
@@ -264,6 +286,25 @@ const AmountInWords = numberToWords(GrandTotal)
         />
       {(!Attention || Attention?.trim() === "") && errorLoading ? <Text style={styles.errorText}>Attention is required</Text> : null}
 
+      <Text style={styles.label}>Phone Number</Text>
+        <Input 
+          value={phoneNumber} 
+          onChangeText={setphoneNumber}
+          outlined 
+          placeholder="Type here..."
+        />
+
+<Text style={styles.label}>Email</Text> 
+        <Input
+          value={Email}
+          onChangeText={setEmail} 
+          outlined
+          placeholder="Enter Email" 
+          multiline={true}
+          numberOfLines={1} 
+        />
+
+ 
  <Text style={styles.label}>Address</Text> 
         <Input
           value={Address}
@@ -314,6 +355,18 @@ const AmountInWords = numberToWords(GrandTotal)
                 keyboardType="numeric" // Add keyboardType prop
               />
 
+<Text style={styles.label}>Validity of Quote</Text> 
+        <Input
+          value={Validity}
+          onChangeText={setValidity}
+          outlined 
+          placeholder="5 Days"  
+          keyboardType="numeric"
+        />
+     {(Validity.trim() === ''  || !Validity) && errorLoading  ? <Text style={styles.errorText}>Validity of Quote is required</Text> : null}  
+        
+
+              
 
               <Text style={styles.label}>Delivery Period</Text> 
               <Input
@@ -365,12 +418,30 @@ const AmountInWords = numberToWords(GrandTotal)
             <Text style={styles.label}>Note</Text>  
               <Input
                 value={Note}
-                onChangeText={setNote} 
+                onChangeText={setNote}  
                 outlined
                 placeholder="Enter Note" 
                 multiline={true}
                 numberOfLines={1} 
               />
+       
+
+
+      {(invoiceList?.invoiceType === "INVOICE" || invoiceType === "INVOICE") && (
+                          <View>
+                            <Text style={styles.label}>Paid</Text>
+                            <View style={styles.pickerBorder}>
+                              <Picker
+                                selectedValue={Paid}
+                                style={styles.picker}
+                                onValueChange={handlePaid}
+                              >
+                                <Picker.Item label="Yes" value="Yes" />
+                                <Picker.Item label="No" value="No" />
+                              </Picker>
+                            </View>
+                          </View>   
+                        )}
 
            </>
         )}

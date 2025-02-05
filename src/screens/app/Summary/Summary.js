@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
   Pressable,
   SafeAreaView,
   ScrollView, 
@@ -18,20 +19,25 @@ import DateInput from '../../../components/DateInput';
 import Input from '../../../components/Input';
 import styles from './styles';
 import { useDispatch, useSelector } from 'react-redux';
-import { setAddProduct, setSelectedItem, setToUpdate } from '../../../store/invoices';
+import { setAddProduct, setSelectedItem, setSummaryLatest, setToUpdate } from '../../../store/invoices';
 import { setProductItem } from '../../../store/invoices';
 import Title from '../../../components/Title';
 import { useIsFocused } from '@react-navigation/native';
 import { setAllProduct,setSubTotal } from '../../../store/invoices';
 import { calculateTotalAmount } from '../../../constants/categories';
+import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
+import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
+import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceThunk';
+import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
+import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 
 const Summary = ({ navigation }) => { 
   const user = useSelector(state => state?.invoices?.user)
   const allProduct = useSelector(state => state?.invoices?.addProduct);
-  const invoice  = useSelector(state => state?.invoices?.data); 
+  const invoice  = useSelector(state => state?.invoices?.invoiceLatest);  
   const dispatch = useDispatch(); 
   const isFocused = useIsFocused();
-  const [Installation,setInstallation] = useState("")
+  const [Installation,setInstallation] = useState("") 
   const [Transportation,setTransportation] = useState("") 
   const [Discount,setDiscount] = useState("") 
   const [discountValue, setDiscountValue] = useState("")
@@ -40,59 +46,29 @@ const Summary = ({ navigation }) => {
   const [selectedVAT, setSelectedVAT] = useState("Yes")
   const [invoiceDate, setInvoiceDate] =  useState(new Date()); 
   const [loading, setLoading] = useState(false);
-  const [errorLoading,SetErrorLoading] = useState(false)
-  const [DeliveryPeriod,setDeliveryPeriod] = useState("")
-  const [Note,setNote] = useState("")
-  
+  const [errorLoading,SetErrorLoading] = useState(false) 
+  const [DeliveryPeriod,setDeliveryPeriod] = useState("") 
+  const [Validity,setValidity] = useState("") 
+  const [Note,setNote] = useState("")  
 
   const selectedItem  = useSelector(state => state?.invoices?.selectedItem); 
   const filterselectedProducts = selectedItem?.filter(product => product?.invoiceNo === invoice?.invoiceNo)
   const filteredProducts = allProduct?.filter(product => product?.invoiceNo === invoice?.invoiceNo)
   const arrangedProducts = filteredProducts?.slice().reverse();  
   const finalProduct = filterselectedProducts.concat(arrangedProducts); 
-
+  
+ 
   let subTotal = Math.ceil(calculateTotalAmount(finalProduct))   
-   
-  useEffect(() => {   
-    firestore()  
-        .collection('ProductInvoice') 
-        .where('userId', '==', user?.uid)
-        .get() 
-        .then(querySnapshot => {
-            const newProductItem = []; 
-            querySnapshot.forEach(documentSnapshot => {
-              newProductItem.push({
-                uid: documentSnapshot.id,
-                ...(documentSnapshot.data() || {}),
-              }); 
-            });
-           
-            const sortedProducts = newProductItem.sort((a, b) => b.invoiceDate - a.invoiceDate);
-            dispatch(setAddProduct(sortedProducts));   
-        });       
 
+  useEffect(() => {       
+    dispatch(fetchProductItem(user?.uid))  
+    dispatch(fetchProductSelect(user?.uid))      
+    dispatch(fetchproductInvoice(user?.uid))
+    dispatch(fetchselectedItem(user?.uid))    
+    dispatch(fetchInvoiceData(user?.uid));  
        subTotal = Math.ceil(calculateTotalAmount(finalProduct))   
-  }, [user, dispatch, isFocused]); 
-
-  useEffect(() => {   
-    firestore() 
-        .collection('SelectedItem') 
-        .where('userId', '==', user?.uid)
-        .get() 
-        .then(querySnapshot => {
-            const newProductItem = []; 
-            querySnapshot.forEach(documentSnapshot => {
-              newProductItem.push({
-                uid: documentSnapshot.id, 
-                ...(documentSnapshot.data() || {}),
-              }); 
-            }); 
-           
-            const sortedProducts = newProductItem.sort((a, b) => b.invoiceDate - a.invoiceDate);
-            dispatch(setSelectedItem(sortedProducts));   
-        });       
-        subTotal = Math.ceil(calculateTotalAmount(finalProduct)) 
-  }, [user, dispatch, isFocused]);
+  }, [user, isFocused]); 
+ 
   
 
   
@@ -147,46 +123,51 @@ const Summary = ({ navigation }) => {
 
 
   const onSubmit = () => {
-    if (!selectedWarranty || !selectedPaymentPlan || !Transportation || !DeliveryPeriod ||
+    if (!selectedWarranty || !selectedPaymentPlan || !Transportation || !DeliveryPeriod || !Validity ||
       selectedWarranty.trim() === '' || selectedPaymentPlan.trim() === '' || 
-      Transportation.trim() === '' || DeliveryPeriod.trim() === '') {
+      Transportation.trim() === '' || DeliveryPeriod.trim() === '' || Validity.trim() === '') {
         SetErrorLoading(true);
     Alert.alert('Please complete the invoice form');
     return;    
   }
-
+  
+  const data = { 
+    DeliveryPeriod,
+    selectedPaymentPlan, 
+    selectedWarranty,
+    selectedVAT,
+    Installation,
+    Transportation,
+    Validity,
+    Discount, 
+    invoiceNo:invoice.invoiceNo, 
+    createdAt: firestore.FieldValue.serverTimestamp(),
+    Note,
+    invoiceDate,
+    userId: user?.uid,  
+  }
+  dispatch(setSummaryLatest(data));  
      
     SetErrorLoading(true)
     setLoading(true);
     firestore()
       .collection('Summary') 
-      .add({ 
-        DeliveryPeriod,
-        selectedPaymentPlan, 
-        selectedWarranty,
-        selectedVAT,
-        Installation,
-        Transportation,
-        Discount,
-        invoiceNo:invoice.invoiceNo, 
-        Note,
-        invoiceDate,
-        userId: user?.uid,  
-      })
+      .add(data) 
       .then(() => { 
         setLoading(false);
         SetErrorLoading(false)
         dispatch(setToUpdate()); 
         navigation.navigate('ExportPdf');    
-        setInvoiceDate(new Date()); 
-        setDeliveryPeriod("");
-        setNote("");
-        setInstallation("");
-        setTransportation("");
-        setDiscount("");
-        setSelectedWarranty("NO WARRANTY");;
-        setSelectedPaymentPlan("50% UPFRONT PAYMENT AND 50% BALANCE AFTER DELIVERY");  
+        setInvoiceDate(invoiceDate);  
+        setDeliveryPeriod(DeliveryPeriod);
+        setNote(Note);
+        setInstallation(Installation);
+        setTransportation(Transportation);
+        setDiscount(Discount);
+        setSelectedWarranty(selectedWarranty);;
+        setSelectedPaymentPlan(selectedPaymentPlan);  
         Alert.alert('Invoice saved successfully');
+        Keyboard.dismiss(); 
       })
       .catch(e => {
         console.log('error when adding information :>> ', e);
@@ -205,7 +186,7 @@ const Summary = ({ navigation }) => {
         />
       </Pressable> 
 
-      <ScrollView>
+      <ScrollView  keyboardShouldPersistTaps="handled">
       <Title type="thin">Summary</Title> 
 
       <Text style={styles.label}>SubTotal</Text> 
@@ -241,7 +222,19 @@ const Summary = ({ navigation }) => {
           placeholder={installation}
           keyboardType="numeric" 
         />
+ 
 
+<Text style={styles.label}>Validity of Quote</Text> 
+        <Input
+          value={Validity}
+          onChangeText={setValidity}
+          outlined 
+          placeholder="5 Days"  
+          keyboardType="numeric"
+        />
+     {(Validity.trim() === ''  || !Validity) && errorLoading  ? <Text style={styles.errorText}>Validity of Quote is required</Text> : null}  
+        
+    
 
         <Text style={styles.label}>Delivery Period</Text> 
         <Input
@@ -298,8 +291,7 @@ const Summary = ({ navigation }) => {
           multiline={true}
           numberOfLines={1} 
         />
-
-        {loading ? (
+    {loading ? (
           <ActivityIndicator /> 
         ) : (
           <Button style={styles.button} type="blue" onPress={onSubmit}>

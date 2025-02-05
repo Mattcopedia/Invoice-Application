@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {DrawerContentScrollView} from '@react-navigation/drawer';
+import Collapsible from 'react-native-collapsible'; 
 import auth from '@react-native-firebase/auth';
 import {Image, Linking, Pressable, StyleSheet, Text, View} from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Printer from 'react-native-vector-icons/AntDesign';
 import  Update from 'react-native-vector-icons/MaterialIcons';
+import  Receipt from 'react-native-vector-icons/Ionicons';
+
 
 import colors from '../../constants/colors';
 import {
@@ -19,6 +21,11 @@ function DrawerContent(props) {
 
   const {navigation} = props;
  
+  const [isDropdownCollapsed, setIsDropdownCollapsed] = useState(true);
+
+  const toggleDropdown = () => {
+    setIsDropdownCollapsed(!isDropdownCollapsed);
+  };
 
   const logout = () => {
     auth() 
@@ -54,7 +61,7 @@ function DrawerContent(props) {
        Dashboard
       </Text> 
        </Pressable>
-     
+      
       
        <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('AllInvoices')}
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
@@ -65,24 +72,47 @@ function DrawerContent(props) {
       </Text>  
        </Pressable>
 
-       <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('GeneratedInvoiceList')}
-        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-        >
-       <Update name={'update'}  size={25}  color={colors.purple} />
-       <Text style={styles.link} >
-        History
-      </Text>  
-       </Pressable>
-       
-         
-       <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('ExportPdf')}
-        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-        >
-       <Printer name={'printer'}  size={25}  color={ colors.purple} />
-       <Text style={styles.link}>
-       Invoice Preview 
-      </Text> 
-       </Pressable>
+       <Pressable
+        style={styles.IconContainer}
+        onPress={toggleDropdown}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <MaterialCommunityIcons name="menu-down" size={25} color={colors.purple} />
+        <Text style={styles.link}>Invoice</Text>
+      </Pressable> 
+
+       <Collapsible collapsed={isDropdownCollapsed}>
+          <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('GeneratedInvoiceList')}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            >
+          <Update name={'update'}  size={25}  color={colors.purple} />
+          <Text style={styles.link} >
+          Invoice History 
+          </Text>  
+          </Pressable>
+
+      
+
+       <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('GeneratedRefurbishInvoiceList')}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            >
+          <Update name={'history-edu'}  size={25}  color={colors.purple} />
+          <Text style={styles.link} >
+          Refurbishment History
+          </Text>  
+          </Pressable>
+
+      </Collapsible> 
+
+   
+      <Pressable style={styles.IconContainer} onPress={() => navigation.navigate('ReceiptPdfList')}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            > 
+          <Receipt name={'receipt-outline'}  size={25}  color={colors.purple} />
+          <Text style={styles.link} >
+            Receipt History
+          </Text>  
+          </Pressable>
 
        <Pressable style={styles.IconContainer} onPress={() => Linking.openURL(PRIVACY_POLICY_LINK)}
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
@@ -167,7 +197,13 @@ const styles = StyleSheet.create({
   },
   cancel: {
     paddingRight: 20
-  }
+  },
+  subLinkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 30,
+  },
 });
 
 export default React.memo(DrawerContent);
