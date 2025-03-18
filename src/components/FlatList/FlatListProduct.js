@@ -39,7 +39,7 @@ const FlatListProduct = ({filteredAllInvoices,mutate}) => {
     }
     keyExtractor={(item, index) => index.toString()}
     renderItem={({ item, index }) => (
-        <Pressable onPress={() => handleNavigate(item)} style={styles.containerFlex}>
+        <Pressable onPress={() => handleNavigate(item)} style={styles.containerFlex3}>
             <View style={styles.item}>
                 <Text style={styles.num}>{index+1}</Text>
                 <Image

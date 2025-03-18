@@ -1,24 +1,21 @@
-import React,{useState, useEffect, useCallback} from 'react'
-import {SafeAreaView, ImageBackground, FlatList,ScrollView, ActivityIndicator} from 'react-native';
-import {  Text, View } from 'react-native'
-import { Alert } from 'react-native';  
-import { useSelector, useDispatch } from 'react-redux';
-import styles from './styles';
-import { setAddProduct, setImages, setSelectedItem  } from '../../../store/invoices';
-import InvoiceText from '../../../components/invoiceText/invoiceText';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, ImageBackground, SafeAreaView, Text, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../../components/Button';
 import Header from '../../../components/Header';
-import { useIsFocused } from '@react-navigation/native'; 
+import InvoiceText from '../../../components/invoiceText/invoiceText';
 import { calculateTotalAmount, convertDate, formatNumberWithCommas, getName, getWelcomeName, numberToWords } from '../../../constants/categories';
-import auth from '@react-native-firebase/auth';  
-import { setUserName} from '../../../store/invoices'; 
-import { htmlStyles } from '../../../constants/styles'; 
-import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceThunk';
-import { fetchSummaryData } from '../../../store/redux-thunks/SummaryThunk';
-import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
-import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
 import { createPDF } from '../../../constants/helperFunctions';
-import firestore from '@react-native-firebase/firestore';
+import { htmlStyles } from '../../../constants/styles';
+import { setUserName } from '../../../store/invoices';
+import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
+import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceThunk';
+import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
+import { fetchSummaryData } from '../../../store/redux-thunks/SummaryThunk';
+import styles from './styles';
 
 
 
@@ -39,8 +36,8 @@ const ExportPdf = ({ navigation }) => {
   const filterselectedProducts = selectedItem?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
   const filteredProducts = addProduct?.filter(product => product?.invoiceNo === invoices?.invoiceNo)
   const arrangedProducts = filteredProducts?.slice().reverse();    
- const finalProduct = filterselectedProducts.concat(arrangedProducts);  
- const [loading, setLoading] = useState(false);
+  const finalProduct = filterselectedProducts.concat(arrangedProducts);  
+  const [loading, setLoading] = useState(false);
 
 
 const dateFormatted = convertDate(invoiceDate?.toDate())     
@@ -374,7 +371,7 @@ const displayFinalCalculations = () => {
                 </th>
             </tr> 
       
-
+ 
               <tbody>
               ${createTableRows()?.join('')} 
                   <!-- Add more rows as needed -->
@@ -422,7 +419,7 @@ const displayFinalCalculations = () => {
 
                 <Text style={styles.invoiceText}>Date</Text>
                 <InvoiceText>
-                  {dateFormatted} 
+                  {dateFormatted}  
                 </InvoiceText>
 
                 <Text style={styles.invoiceText}>Invoice No</Text>

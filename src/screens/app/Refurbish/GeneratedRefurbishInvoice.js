@@ -1,20 +1,21 @@
-import React,{useState, useEffect, useCallback, useMemo} from 'react'
-import {SafeAreaView} from 'react-native';
-import {  Text} from 'react-native' 
-import { useSelector, useDispatch } from 'react-redux'; 
-import styles from './styles';
-import InvoiceText from '../../../components/invoiceText/invoiceText'; 
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, ImageBackground, RefreshControl, SafeAreaView, Text, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../../components/Button';
 import Header from '../../../components/Header';
-import { convertDate, DuplicateInvoice, DuplicateInvoiceRefurb, formatNumberWithCommas,  getWelcomeName, numberToWords, } from '../../../constants/categories';
-import auth from '@react-native-firebase/auth';  
-import firestore from '@react-native-firebase/firestore';
-import { setGeneratedRefurbishInvoiceList, setRefurbishInvoiceList, setToUpdate, setUserName} from '../../../store/invoices'; 
-import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
-import { refurbishStyles } from '../../../constants/refurbishStyles';
-import { CompanyName, displayFinalCalculations, TableHeader } from '../../../constants/htmlContent';
+import InvoiceText from '../../../components/invoiceText/invoiceText';
+import { convertDate, DuplicateInvoiceRefurb, getWelcomeName } from '../../../constants/categories';
 import { createPDF2 } from '../../../constants/helperFunctions';
-import InvoicePdf from '../../../components/InvoicePdf';
+import { pdfContent4, pdfContent5 } from '../../../constants/htmlContent';
+import { refubishStylesFabric } from '../../../constants/refubishStylesFabric';
+import { refurbishStyles } from '../../../constants/refurbishStyles';
+import { setGeneratedRefurbishInvoiceList, setRefurbishInvoiceList, setUserName } from '../../../store/invoices';
+import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList';
+import { fetchRefurbish } from '../../../store/redux-thunks/RefurbishThunk';
+import styles from './styles';
 
   
  
@@ -26,18 +27,41 @@ const GeneratedRefurbishInvoice = ({ route }) => {
   const UserName = useSelector(state => state?.invoices?.UserName);
   const [refreshing, setRefreshing] = useState(false);
   const [count, setCount] = useState(1);
-  const navigation = useNavigation();
+  const navigation = useNavigation(); 
   const dispatch = useDispatch();
-  const isFocused = useIsFocused(); 
+  const isFocused = useIsFocused();  
   const dateFormatted = convertDate(invoiceList?.Date.toDate())    
+
+  const finalSortedArray = Object.values(
+    invoiceList?.Product.reduce((acc, product) => {
+      const { label } = product;
+   
+      if (!acc[label]) {
+        acc[label] = {
+          label: label,
+          Product: []
+        };
+      }
   
+      acc[label].Product.push({...product,});
+  
+      return acc;
+    }, {})
+  );
+
+  const imageUris = invoiceList?.Product.map(product => product.ImageUri);
+  const allSameImageUri = imageUris.every(uri => uri === imageUris[0]);
+  const updatedList = {...invoiceList}
+  updatedList.Product = finalSortedArray   
+  const finalInvoiceList = {...updatedList}  
+
+  console.log(`finalInvoiceList3`,finalInvoiceList)
+
+   
   const handleNavigateEditInvoice = () => { 
     dispatch(setRefurbishInvoiceList(invoiceList));   
     navigation.navigate('GeneratedRefurbishInvoiceEdit')
-  } 
-  
-  
-
+  }  
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
@@ -46,12 +70,12 @@ const GeneratedRefurbishInvoice = ({ route }) => {
       }
     }); 
     return () => unsubscribe();
-  }, [user, dispatch]);
+  }, [user]);
 
   const fetchInvoices = async () => {
     try {
       const querySnapshot = await firestore()
-        .collection('GeneratedRefurbishInvoice')
+        .collection('GeneratedRefurbishInvoice') 
         .where('userId', '==', user?.uid)
         .get();
 
@@ -68,15 +92,15 @@ const GeneratedRefurbishInvoice = ({ route }) => {
       dispatch(setGeneratedRefurbishInvoiceList(targetInvoice));
       setLocalInvoiceList(targetInvoice);
     } catch (error) {
-      console.error('Error fetching invoices:', error);
+      console.error('Error fetching invoices:', error);  
     }
-  } 
+  }   
 
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused) { 
       fetchInvoices();
-    }
-  }, [isFocused, user, invoiceList, invoiceList?.uid,invoiceList?.Paid, invoiceList?.invoiceType]);
+    } 
+  }, [isFocused, user]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -99,117 +123,6 @@ const GeneratedRefurbishInvoice = ({ route }) => {
   }
 
 
-  const pdfContent = () => {
-    const content = invoiceList?.Product?.map((item) => { 
-      const subTotal = item?.Amount    
-  
-     const discount = invoiceList?.Discount?.trim() !== "" ? subTotal * (parseFloat(invoiceList?.Discount) / 100) : 0
-     let sumTotal = ( parseFloat(subTotal) + parseFloat(invoiceList?.Transportation || 0) +  
-    parseFloat(invoiceList?.Installation || 0));
-     if (invoiceList?.Discount?.trim() !== "" || !isNaN(invoiceList?.Discount)) {  
-        sumTotal -= discount   
-     }  
-     if(invoiceList?.selectedVAT === "No") {
-      Vat = 0
-    }  
-     let Vat = 0
-     if(invoiceList?.selectedVAT === "Yes") {
-       Vat = (7.5/100) * (sumTotal)
-     }
-  
-    const GrandTotal = sumTotal + Vat
-    console.log("item",item)  
-    console.log()
-    const AmountInWords = numberToWords(GrandTotal) 
-  
-    const formattedDescription  = `${item?.Description} <br /> <strong>COLOUR: TBD BY CLIENT</strong>  `
-
-        return  `   
-      
-       <div class="page-content">
-                <div class="space borderAround"></div>
-    
-                          <div class="container  borderWall"> 
-                  <div id="shiftImage">
-                  <img src="https://firebasestorage.googleapis.com/v0/b/planify-1ce36.appspot.com/o/Cristo.JPG?alt=media&token=505360c1-a8c0-40d0-9df9-cc2b56df6b7c"
-                  alt="Cristo Invoice"/> 
-                </div>
-                
-                <div class="text"> 
-                  <h2>CRISTO PROJECTS LIMITED</h2>
-                  <div class="align-text">
-                  <p class="alignFactory color">FACTORY: 10 LEYE PRATT STREET, OFF ISHERI-MAGODO ROAD, LAGOS</p>
-                  
-                  
-                <div class="Telphone"> <p class="color" >Tel: 08030881676, 09139057062</p>  
-                
-                  <h3 class="invoice" >${invoiceList?.invoiceType}</h3>
-                  <p class="color" >INVOICE NO: ${invoiceList?.invoiceNo}</p>
-                  <p class="color">TIN: 31590437-0001</p></div>
-    
-                  </div>
-    
-    
-                </div>
-              
-              </div>
-    
-              <div class="descriptionContainer borderWall">
-    
-                <div class="description">
-                 <p class="color">Attn: ${invoiceList?.Attention}</p>
-                 <p class="color">${invoiceList?.phoneNumber }</p> 
-                <p class="color"> ${invoiceList?.CompanyName}</p> 
-                <p class="color">LOCATION: ${invoiceList?.Address}</p> 
-                </div>
-     
-                <div class="date">
-                <p class="color" > Date: ${dateFormatted} </p> 
-                ${getName()}   
-                </div>   
-    
-              </div> 
-    
-          
-              <table>
-    
-              ${TableHeader()}  
-        
-                <tbody>
-    
-                <tr>
-                    <td colspan="5" class="spacerefurb" ><h2>${item.label}</h2></td> 
-                  </tr>   
-    
-        <tr>   
-          <td><span class="outside-number">${1}</span> <img class="furniture" style="height: 175px; width: 200px;" src=${item.ImageUri} alt="furniture"></td>
-          <td class="center">${formattedDescription}</td>  
-          <td class="center">${item?.Quantity}</td>
-          <td class="right">${formatNumberWithCommas(item?.UnitPrice)}</td> 
-          <td class="right total-amount">${formatNumberWithCommas(item?.Amount)}</td>  
-        </tr> 
-    
-                   
-                  <tr>
-    
-                    <tr>
-                    <td colspan="5" class="space" ></td> 
-                  </tr>   
-                ${displayFinalCalculations(invoiceList,item,AmountInWords,GrandTotal,subTotal,sumTotal,discount,Vat)} 
-  
-                </tr>
-                </tbody>
-    
-     
-            </table>     
-
-            </div> 
-    
-    
-      `; 
-      })
-      return content
-  } 
       
     const htmlContentPage = `
          <!DOCTYPE html>
@@ -225,20 +138,22 @@ const GeneratedRefurbishInvoice = ({ route }) => {
         rel="stylesheet"
       />
     
-      <style>
-          ${refurbishStyles} 
-        </style> 
+      <style> 
+          ${ allSameImageUri ? refurbishStyles : refubishStylesFabric}  
+        </style>  
       </head>
     
     
                 <body> 
-       ${pdfContent()?.join('')} 
+       ${ allSameImageUri ? 
+        pdfContent4(invoiceList,dateFormatted,getName,getWelcomeName)?.join('') :
+       pdfContent5(finalInvoiceList,invoiceList,dateFormatted,getName,getWelcomeName)?.join('')}   
 
               </body>  
             </html>
     
      ` 
- 
+  
 
 const item2 = invoiceList
 
@@ -246,12 +161,12 @@ const handleDelete = async () => {
   try {
  await firestore()
   .collection('GeneratedRefurbishInvoice') 
-  .doc(item2?.uid) 
+  .doc(item2?.uid)   
   .delete() 
   .then(() => {  
       console.log("Invoice Deleted!")
-      dispatch(setToUpdate()); 
-      navigation.navigate("GeneratedRefurbishInvoiceList")  
+       dispatch(fetchGeneratedRefurbishInvoice(user?.uid))  
+      navigation.navigate("GeneratedRefurbishInvoiceList")    
   }); 
      
   } catch (error) {
@@ -262,26 +177,258 @@ const handleDelete = async () => {
 
 const DuplicateInvoice2 = async (invoiceList) => {
   DuplicateInvoiceRefurb(invoiceList) 
+   dispatch(fetchGeneratedRefurbishInvoice(user?.uid))   
  navigation.navigate("GeneratedRefurbishInvoiceList")      
 } 
   
 const generatePDF = () => {
   createPDF2(invoiceList,htmlContentPage,count,setCount,true) 
+      dispatch(fetchRefurbish(user?.uid));   
 }
 
   return (
     <SafeAreaView style={styles.container} key={invoiceList?.uid || 'default'}>
          <Header title={`${invoiceList?.Attention} Invoice`}   />   
          <Text style={styles.invoiceText2}>Welcome, {getWelcomeName()} </Text>
+         <FlatList
+             data={invoiceList?.Product} 
+             key={`${invoiceList?.Paid}`}    
+            // extraData={{ Paid: invoiceList?.Paid, invoiceType: invoiceList?.invoiceType }}    
+             keyExtractor={(item,index) => item.uid || index.toString()} 
+          ListHeaderComponent={() => ( 
+            <View style={[styles.padLeft, styles.stickyHeader]}>  
+            <Text style={styles.titleProduct}>Product Details</Text>
+          </View> 
+          )} 
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
 
-    <InvoicePdf invoiceList={invoiceList} item2={item2} DuplicateInvoice2={DuplicateInvoice}
-                  handleNavigateEditInvoice={handleNavigateEditInvoice} generatePDF={generatePDF}
-                   handleDelete={handleDelete} refreshing={refreshing} onRefresh={onRefresh} dateFormatted={dateFormatted}/>      
+          ListFooterComponent={() => ( 
+             <>
+            <View style={styles.container}>   
+            <Text style={styles.titleProduct}>Invoice Details</Text>
  
+            <Text style={styles.invoiceText}>Date</Text>
+           <InvoiceText>
+              {dateFormatted} 
+           </InvoiceText>
+ 
+           <Text style={styles.invoiceText}>Invoice No</Text>
+           <InvoiceText>
+              {invoiceList?.invoiceNo}
+           </InvoiceText> 
+ 
+           <Text style={styles.invoiceText}>Invoice Type</Text>
+           <InvoiceText>
+              {invoiceList?.invoiceType}
+           </InvoiceText>
 
-    </SafeAreaView>  
+               
+      
+ 
+           {invoiceList?.CompanyName?.trim() !== "" && (
+             <View>
+            <Text style={styles?.invoiceText}>Company name</Text>
+            <InvoiceText>
+            {invoiceList?.CompanyName}
+            </InvoiceText> 
+            </View>
+           ) 
+           }
+ 
+           <Text style={styles.invoiceText}>Attention</Text>
+           <InvoiceText>
+              {invoiceList?.Attention} 
+           </InvoiceText>
+
+       
+
+           {(!invoiceList?.CompanyName || invoiceList?.CompanyName?.trim() === "") && (
+                  <View>
+                <Text style={styles.invoiceText}>Phone Number</Text>
+                <InvoiceText>
+                  {invoiceList?.phoneNumber}
+                </InvoiceText>
+                  </View>
+                )}
+
+          {(invoiceList?.Email || invoiceList?.Email?.trim() !== "") && (
+                                <View>
+                                 <Text style={styles.invoiceText}>Email address</Text>
+                                        <InvoiceText>
+                                          {invoiceList?.Email}
+                                        </InvoiceText>
+                                          </View>   
+                                        )}  
+          
+         
+           <Text style={styles.invoiceText}>Address</Text>
+           <InvoiceText>
+              {invoiceList?.Address}
+           </InvoiceText>
+
+           {invoiceList?.invoiceType !== "TECHNICAL PROPOSAL"  &&  (
+            <>
+               <Text style={styles.invoiceText}>Payment Terms</Text>
+           <InvoiceText>
+              {invoiceList?.selectedPaymentPlan}
+           </InvoiceText>
+ 
+         
+           {invoiceList?.Discount?.trim() !== "" && (
+                  <View>
+
+                <Text style={styles?.invoiceText}>DISCOUNT</Text>
+                {invoiceList?.Discount?.trim() !== "0" ? (  
+                  <InvoiceText>
+                {invoiceList?.Discount}%
+                </InvoiceText> ) :
+               (  <InvoiceText>  
+                     N/A
+                </InvoiceText> )
+                }  
+ 
+                </View>
+                ) 
+                }
+
+                <Text style={styles?.invoiceText}>Installation</Text>
+
+                {invoiceList?.Installation?.trim() !== "0" ? (  
+                  <InvoiceText>
+                ₦{invoiceList?.Installation}
+                </InvoiceText> ) : 
+              (  <InvoiceText>
+                     FREE
+                </InvoiceText> )
+                } 
+
+                <Text style={styles?.invoiceText}>Transportation</Text>
+                {invoiceList?.Transportation?.trim() !== "0" ? (  
+                  <InvoiceText>
+                ₦{invoiceList?.Transportation}
+                </InvoiceText> ) :
+               (  <InvoiceText>
+                     FREE
+                </InvoiceText> ) 
+                }  
+  
+       
+           <Text style={styles?.invoiceText}>Delivery Period</Text>
+           <InvoiceText>
+            {invoiceList?.DeliveryPeriod} DAYS
+           </InvoiceText> 
+ 
+           <Text style={styles?.invoiceText}>Validity of Quote</Text>
+           <InvoiceText>
+           {invoiceList?.Validity} DAYS 
+           </InvoiceText> 
+
+           {invoiceList?.Note?.trim() !== "" && (
+             <View>
+            <Text style={styles?.invoiceText}>Note</Text>
+            <InvoiceText> 
+            {invoiceList?.Note} 
+            </InvoiceText> 
+            </View>
+           ) 
+           }
+            
+           
+            </>
+  )}
+ 
+            <View>
+            <Text style={styles?.invoiceText}>Paid</Text>
+            <InvoiceText>
+            {invoiceList?.Paid} 
+            </InvoiceText> 
+            </View>
+        
+           <Button style={styles.button} type="blue" onPress={generatePDF}>
+                  <Text>View Invoice</Text>    
+                </Button> 
+          
+                <Button style={styles.button} type="blue" onPress={() => DuplicateInvoice2(invoiceList)}>
+                  <Text>Duplicate Invoice</Text>   
+                </Button>   
+
+                <Button style={styles.button} type="blue" onPress={handleNavigateEditInvoice}>
+                  <Text>Edit Invoice</Text>   
+                </Button>    
+
+                {invoiceList?.Paid === "Yes" && invoiceList?.invoiceType === "INVOICE"  &&  (
+                  <View>
+                    <Button style={styles.button} type="blue" onPress={() => navigation.navigate('ReceiptForm', { item2 })}>
+                  <Text>Create Receipt</Text>   
+                </Button>  
+                  </View>  
+                )}
+
+
+          <Button style={styles.button} del="red"  onPress={handleDelete}> 
+            <Text>Delete</Text> 
+          </Button> 
+
+          </View> 
+          </> 
+          )}
+          renderItem={({ item, index }) => (
+            
+            <View style={styles.containerProduct}>   
+              <Text style={styles.label2}>{item.label}</Text> 
+        <View style={styles.Photo}>  
+       <ImageBackground source={{ uri:item?.ImageUri }} style={styles.imageBackgroundFlat}>
+       </ImageBackground>  
+       </View> 
+              
+              <Text style={styles.invoiceText}>Description</Text>
+        <InvoiceText>
+          {item?.Description}
+        </InvoiceText>  
+    
+                        <View>
+                      <Text style={styles.invoiceText}>Quantity</Text>
+                    <InvoiceText>
+                    {item?.Quantity}
+                    </InvoiceText> 
+                        </View> 
+                       
+         
+        <Text style={styles?.invoiceText}>Unit Price</Text>
+        <InvoiceText>
+        ₦{item?.UnitPrice}
+        </InvoiceText> 
+
+                        <View>
+                       <Text style={styles?.invoiceText}>Amount</Text>
+                      <InvoiceText>
+                      ₦{item?.Amount}
+                      </InvoiceText> 
+                        </View> 
+
+                        <View>
+                       <Text style={styles?.invoiceText}>Warranty</Text>
+                      <InvoiceText>
+                      ₦{item?.Warranty}   
+                      </InvoiceText> 
+                        </View> 
+
+
+     
+
+        <Button style={styles.button} type="blue" onPress={() => navigation.navigate('GeneratedRefurbishProductEdit', { item,item2})}>
+                  <Text>Edit Product</Text>   
+                </Button> 
+
+            </View>
+          )} 
+        />     
+
+    </SafeAreaView>   
   ) 
 }
-
+ 
 export default React.memo(GeneratedRefurbishInvoice)
 

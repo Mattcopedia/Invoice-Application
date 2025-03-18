@@ -4,9 +4,10 @@ import colors from '../../../constants/colors';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20, // Adjust padding as needed
+    padding: 20, 
     marginBottom: 20
-  },
+  }, 
+ 
   backContainer: {
     padding: 24,
   },

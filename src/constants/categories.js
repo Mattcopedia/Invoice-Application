@@ -294,6 +294,7 @@ export   const choosePhotoFromLibrary = (index,setProductItems,setModalVisible) 
         }
       );
     };
+
   
 
 export const uploadImage = async (index, productItems, user, setProductItems, handleProductItemChange, setTransferred,imagePath) => {
@@ -393,6 +394,33 @@ export const GenerateInvoiceNo = () => {
  export const DuplicateInvoice = async (invoiceList) => {
 
   const invoiceNo = GenerateInvoiceNo();
+    
+  if(invoiceList?.invoiceType === "TECHNICAL PROPOSAL" ) {
+    await firestore()
+    .collection(`GeneratedInvoice`) 
+    .add({  
+      Product:invoiceList?.Product,
+      invoiceDate:invoiceList?.invoiceDate,
+      Address:invoiceList?.Address,
+      invoiceNo:invoiceNo, 
+      Date: invoiceList?.Date,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      CompanyName:invoiceList?.CompanyName,
+      Attention:invoiceList?.Attention, 
+      phoneNumber: invoiceList?.phoneNumber, 
+      Email: invoiceList?.Email, 
+      invoiceType:invoiceList?.invoiceType,
+      userId: invoiceList?.userId,  
+      userName: invoiceList?.userName,
+      Paid: "No",  
+      GoogleUserName: invoiceList?.GoogleUserName,   
+    }) 
+    .catch(e => { 
+      console.log('error when adding information :>> ', e);
+      Alert.alert(e.message);   
+    }); 
+    return; 
+  }
 
   await firestore()
   .collection('GeneratedInvoice') 
@@ -437,6 +465,33 @@ export const GenerateInvoiceNo = () => {
 export const DuplicateInvoiceRefurb = async (invoiceList) => {
 
   const invoiceNo = GenerateInvoiceNo();
+
+  if(invoiceList?.invoiceType === "TECHNICAL PROPOSAL" ) {
+    await firestore()
+    .collection('GeneratedRefurbishInvoice') 
+    .add({  
+      Product:invoiceList?.Product, 
+      invoiceDate:invoiceList?.invoiceDate,
+      Address:invoiceList?.Address,
+      invoiceNo:invoiceNo, 
+      Date: invoiceList?.Date,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      CompanyName:invoiceList?.CompanyName,
+      Attention:invoiceList?.Attention, 
+      phoneNumber: invoiceList?.phoneNumber, 
+      Email: invoiceList?.Email, 
+      invoiceType:invoiceList?.invoiceType,
+      userId: invoiceList?.userId,  
+      userName: invoiceList?.userName,
+      Paid: "No",  
+      GoogleUserName: invoiceList?.GoogleUserName,   
+    }) 
+    .catch(e => { 
+      console.log('error when adding information :>> ', e);
+      Alert.alert(e.message);   
+    }); 
+    return;  
+  }
 
   const newInvoice = {
     Product:invoiceList?.Product,
@@ -508,3 +563,105 @@ export const DuplicateReceipt = async (receipt) => {
     Alert.alert(e.message);   
   }); 
 }  
+
+
+
+
+
+export const uploadImageRefurb = async (batchIndex, productItems, user, setProductItems, setTransferred, imagePath) => {
+const batch = productItems[batchIndex];
+ 
+  if (!batch.ImageUri || batch.ImageUri === imagePath) {
+    Alert.alert("Please select an image");
+    return;
+  }
+
+  if (batch.uploaded) {
+    Alert.alert("Image is already uploaded");
+    return; 
+  }
+
+  const uploadUri = batch.ImageUri;
+  let filename = uploadUri.substring(uploadUri.lastIndexOf("/") + 1);
+  const extension = filename.split(".").pop();
+  const name = filename.split(".").slice(0, -1).join(".");
+  filename = `${name}_${Date.now()}.${extension}`;
+
+  setProductItems((prevItems) =>
+    prevItems.map((item, i) =>
+      i === batchIndex ? { ...item, uploading: true } : item
+    )
+  ); 
+
+  setTransferred(0);
+  const directory = user?.uid;
+  const storageRef = storage().ref(`${directory}/images/${filename}`);
+
+  try {
+    const task = storageRef.putFile(uploadUri);
+    
+    task.on('state_changed', (taskSnapshot) => {
+      const progress = Math.round((taskSnapshot.bytesTransferred / taskSnapshot.totalBytes) * 100);
+      setTransferred(progress);
+    });
+
+    await task;
+    
+    const downloadURL = await storageRef.getDownloadURL();
+
+    // Update state with the new image URL
+    setProductItems((prevItems) =>
+      prevItems.map((item, i) =>
+        i === batchIndex ? { ...item, ImageUri: downloadURL, uploading: false, uploaded: true } : item
+      )
+    );
+
+    Alert.alert("Image Uploaded", "Image Uploaded to the Cloud Successfully");
+  } catch (error) {
+    console.error("Image upload failed:", error);
+    Alert.alert("Upload Failed", "There was an issue uploading the image."); 
+  }
+}; 
+
+
+export const choosePhotoFromLibrary3 = (batchIndex, setProductItems, setModalVisible) => {
+  setModalVisible(false);
+  launchImageLibrary(
+    {
+      mediaType: 'photo',
+    },
+    (response) => {
+      if (!response.didCancel && response.assets?.[0]?.uri) {
+        setProductItems((prevItems) => {
+          return prevItems.map((batch, i) =>
+            i === batchIndex
+              ? { ...batch, ImageUri: response.assets[0].uri, uploaded: false }
+              : batch
+          );
+        });
+      }
+    }
+  ); 
+};
+
+
+export const takePhotoFromCamera3 = (batchIndex, setProductItems, setModalVisible) => {
+  setModalVisible(false);
+  launchCamera(
+    {
+      mediaType: 'photo',
+      cameraType: 'back',
+    },
+    (response) => {
+      if (!response.didCancel && response.assets?.[0]?.uri) {
+        setProductItems((prevItems) => {
+          return prevItems.map((batch, i) =>
+            i === batchIndex
+              ? { ...batch, ImageUri: response.assets[0].uri, uploaded: false }
+              : batch 
+          );
+        });
+      }
+    }
+  ); 
+};

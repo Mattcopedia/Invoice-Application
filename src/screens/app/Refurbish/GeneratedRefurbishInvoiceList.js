@@ -1,80 +1,84 @@
-import { View, Text, FlatList, SafeAreaView, Pressable, Image, ActivityIndicator } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import Header from '../../../components/Header';
-import firestore from '@react-native-firebase/firestore';
-import { useSelector, useDispatch } from 'react-redux';
-import styles from './styles';
-import { useNavigation, useIsFocused } from "@react-navigation/native";
-import Input from '../../../components/Input';
-import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList';
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, SafeAreaView, TouchableOpacity, View } from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/EvilIcons';
+import { useDispatch, useSelector } from 'react-redux';
 import FlatListRefurbishInvoiceList from '../../../components/FlatList/FlatListRefurbishInvoiceList';
-import useSWR from 'swr';
-import { fetcher, fetchInvoiceList } from '../../../store/redux-thunks/ListCode';
- 
+import Header from '../../../components/Header';
+import SearchInput from '../../../components/SearchInput';
+import colors from '../../../constants/colors';
+import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList';
+import styles from '../AddTask/styles';
+
 const GeneratedRefurbishInvoiceList = () => { 
-    const dispatch = useDispatch();
+    const dispatch = useDispatch();  
     const navigation = useNavigation(); 
-    const user = useSelector(state => state?.invoices?.user)
-    const { data, error, isLoading, mutate } = useSWR(user?.uid , () => fetchInvoiceList(user?.uid ? user?.uid : null,'GeneratedRefurbishInvoice'));
-    const newProduct = useSelector(state => state?.invoices?.GeneratedRefurbishInvoiceList);   
-    const arrangedProducts = newProduct
-    const isFocused = useIsFocused();  
-    const [filteredAllInvoices, setFilteredAllInvoices] = useState(arrangedProducts);
-    const [keyword, setKeyword] = useState("");
-    const [loading, setLoading] = useState(false); 
-
-
-    useEffect(() => {
-      dispatch(fetchGeneratedRefurbishInvoice(user?.uid))
-        if (keyword.length > 2) {
-            const filteredItems = arrangedProducts.filter(product => 
-                product.Attention.toLowerCase().includes(keyword.toLowerCase()) ||
-                product.Address.toLowerCase().includes(keyword.toLowerCase()) || 
-                product.invoiceNo.toLowerCase().includes(keyword.toLowerCase()) ||
-                product.CompanyName.toLowerCase().includes(keyword.toLowerCase()) 
-            );
-            setFilteredAllInvoices(filteredItems);
-        } else if (keyword.length < 1) {
-            setFilteredAllInvoices(arrangedProducts);
-        }  
-    }, [keyword, newProduct]);   
- 
-      useEffect(() => {
-        const fetchData = async () => {
-          setLoading(true);
-          try {
-             dispatch(fetchGeneratedRefurbishInvoice(user?.uid))  
-          } catch (error) { 
-            console.error('Error fetching invoice:', error);
-          } finally {
-            setLoading(false); 
-          } 
-        };
-        if(isFocused) {  
-          fetchData(); 
-        }
-      }, [user,]); 
-  
-  
+    const isFocused = useIsFocused();
     
-    return ( 
-        <SafeAreaView style={{ flex: 1 }}>  
-            <Header title="Refurbishment History" />
-            <Input 
-                value={keyword} 
-                onChangeText={setKeyword}
-                outlined
-                placeholder="Search Invoices"
-            /> 
+    const user = useSelector(state => state?.invoices?.user);
+    const newProduct = useSelector(state => state?.invoices?.GeneratedRefurbishInvoiceList);  
+    const loading = useSelector(state => state?.invoices?.GeneratedRefurbishInvoiceListLoading); 
+    const [showInitialLoader, setShowInitialLoader] = useState(true);
+    const [keyword, setKeyword] = useState("");   
+    const searchInputRef = useRef(null);
+  
 
-                  {loading ? (
-                            <ActivityIndicator /> 
-                          ) : (  
-                            <FlatListRefurbishInvoiceList mutate={mutate} filteredAllInvoices={filteredAllInvoices} />
-                          )}
-   
+        const focusSearchInput = () => {
+            if (searchInputRef.current) {
+                searchInputRef.current.focus(); 
+            } 
+        };
+
+        useEffect(() => {
+            if (isFocused) {
+                dispatch(fetchGeneratedRefurbishInvoice(user.uid)).finally(() => {
+                    setShowInitialLoader(false);
+                });
+            }
+        }, [isFocused, dispatch, user.uid]);
+    
+        // Memoize the filtered invoices based on newProduct and keyword
+        const filteredInvoices = useMemo(() => {
+            if (keyword.length > 2) {
+                return newProduct.filter(product =>
+                    product.Attention.toLowerCase().includes(keyword.toLowerCase()) ||
+                    product.Address.toLowerCase().includes(keyword.toLowerCase()) || 
+                    product.invoiceNo.toLowerCase().includes(keyword.toLowerCase()) ||
+                    product.CompanyName.toLowerCase().includes(keyword.toLowerCase())
+                );
+            }
+            return newProduct; 
+        }, [newProduct, keyword]); 
+
+    return ( 
+        <SafeAreaView style={styles.container2}>   
+            <Header title="Refurbishment History" />
+
+                                <View style={styles.passwordContainer}  >
+                            <TouchableOpacity style={styles.eyeIcon} onPress={focusSearchInput} > 
+                            <MaterialIcon
+                                name={`search`} 
+                                size={35}
+                                color={colors.black}
+                            /> 
+                            </TouchableOpacity>
+                    
+                            <SearchInput  
+                            value={keyword} 
+                            onChangeText={setKeyword} 
+                            placeholder="Search Invoices"
+                            ref={searchInputRef}
+                            focusSearchInput={focusSearchInput}
+                        /> 
+                        </View>
+
+            {showInitialLoader && loading ? (
+                    <ActivityIndicator size="large" color={colors.blue} style={{ transform: [{ scale: 0.75 }] }} />
+                  ) : (
+                    <FlatListRefurbishInvoiceList filteredAllInvoices={filteredInvoices} />
+                  )}  
         </SafeAreaView>
-    );
+    ); 
 };
 
 export default GeneratedRefurbishInvoiceList; 

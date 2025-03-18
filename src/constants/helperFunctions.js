@@ -1,15 +1,13 @@
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import firestore from '@react-native-firebase/firestore';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import FileViewer from 'react-native-file-viewer';
 import RNFS from 'react-native-fs';
-import { Alert, PermissionsAndroid, Platform } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
-import Canvas from 'react-native-canvas';
-import React, { useRef, useEffect } from 'react';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 
 
 
-async function requestStoragePermission() {
+async function requestStoragePermission() { 
     if (Platform.OS === 'android') { 
       try {
         const granted = await PermissionsAndroid.request(
@@ -36,6 +34,33 @@ async function requestStoragePermission() {
 
   const addToFirebase = async (GeneratedInvoice,user,invoices,finalProduct,Vat,subTotal,discount,
     summary,sumTotal,GoogleUser,UserName,GrandTotal,AmountInWords,invoiceDate) => {
+
+     if(invoices?.invoiceType === "TECHNICAL PROPOSAL" ) {
+      await firestore()  
+      .collection(GeneratedInvoice) 
+      .add({  
+        Product:finalProduct,
+        invoiceDate:invoiceDate, 
+        Address:invoices?.Address,
+        invoiceNo:invoices?.invoiceNo,
+        Date: invoices?.invoiceDate,
+        createdAt: firestore.FieldValue.serverTimestamp(), 
+        CompanyName:invoices?.Companyname,
+        Attention:invoices?.Attention, 
+        phoneNumber: invoices?.phoneNumber,   
+        Email: invoices?.Email, 
+        invoiceType:invoices?.invoiceType,
+        userId: user?.uid,  
+        userName: UserName?.displayName,
+        Paid: "No", 
+        GoogleUserName: GoogleUser ? GoogleUser?.name : "", 
+      })
+      .catch(e => { 
+        console.log('error when adding information :>> ', e);
+        Alert.alert(e.message);   
+      });  
+       return;
+     }
 
     await firestore()  
     .collection(GeneratedInvoice) 
@@ -78,6 +103,36 @@ async function requestStoragePermission() {
   }
 
   const addToRefurbish = async (GeneratedInvoice,user,invoices,finalProduct,summary,GoogleUser,UserName,invoiceDate) => {
+    
+    if(invoices?.invoiceType === "TECHNICAL PROPOSAL" ) {
+      await firestore()
+      .collection(GeneratedInvoice) 
+      .add({  
+        Product:finalProduct,
+        invoiceDate:invoiceDate,
+        Address:invoices?.Address,
+        invoiceNo:invoices?.invoiceNo,
+        Date: invoices?.invoiceDate,
+        createdAt: firestore.FieldValue.serverTimestamp(), 
+        CompanyName:invoices?.Companyname, 
+        Attention:invoices?.Attention,
+        invoiceType:invoices?.invoiceType,
+        phoneNumber: invoices?.phoneNumber,
+        Email: invoices?.Email,  
+        Paid: "No", 
+        userId: user?.uid,  
+        userName:UserName ? UserName?.displayName: "", 
+        GoogleUserName: GoogleUser ? GoogleUser?.name : "",   
+      }) 
+      .catch(e => { 
+        console.log('error when adding information :>> ', e);
+        Alert.alert(e.message);   
+      }); 
+      return; 
+    }
+    
+    
+    
     await firestore()
     .collection(GeneratedInvoice) 
     .add({ 
@@ -125,24 +180,29 @@ async function requestStoragePermission() {
 
      
   const generateUniqueFileName = async (baseName, folderPath) => {
-    const maxRetries = 100; 
+    const maxRetries = 1000;  
     let retryCount = 0;
     let fileName;
     let filePath;
    
-    while (retryCount < maxRetries) {
       const randomNumber = Math.floor(Math.random() * 20) + 1;
       fileName = `${baseName}(${randomNumber}).pdf`;
-      filePath = `${folderPath}/${fileName}`;
+      filePath = `${folderPath}/${fileName}`; 
+        return fileName; 
+    
+    // while (retryCount < maxRetries) {
+    //   const randomNumber = Math.floor(Math.random() * 20) + 1;
+    //   fileName = `${baseName}(${randomNumber}).pdf`;
+    //   filePath = `${folderPath}/${fileName}`;
   
-      if (!(await RNFS.exists(filePath))) {
-        return fileName;
-      }
+    //   if (!(await RNFS.exists(filePath))) {
+    //     return fileName;
+    //   }
        
-      retryCount++;
-    }
-    Alert.alert("Unable to generate a unique file name after multiple attempts")
-    throw new Error('Unable to generate a unique file name after multiple attempts');
+    //   retryCount++;  
+    // }
+    // Alert.alert("Unable to generate a unique file name after multiple attempts")
+    // throw new Error('Unable to generate a unique file name after multiple attempts');
   }; 
     
        
@@ -309,5 +369,24 @@ export const handleProductItemChange = (index, field, value,productItems,setProd
 };  
 
 
-        
-        
+export const AmountCalculatorRefurb = (productItems, setProductItems) => {
+  const calculateAmount = (Quantity, UnitPrice) => Quantity * UnitPrice;
+
+  const updatedProductItems = productItems.map(batch => {
+    // Update the products array inside each batch
+    const updatedProducts = batch.products.map(product => ({
+      ...product,
+      Amount: calculateAmount(product.Quantity, product.UnitPrice),
+    }));
+
+    return { ...batch, products: updatedProducts }; 
+  }); 
+
+  setProductItems(prevProductItems => {
+    if (JSON.stringify(prevProductItems) !== JSON.stringify(updatedProductItems)) {
+      return updatedProductItems;
+    }
+    return prevProductItems; 
+  });
+};
+   

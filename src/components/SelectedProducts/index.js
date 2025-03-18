@@ -16,7 +16,7 @@ import {
 const ProductSelectComponent = ({productItems,onSubmit,handleProductItemChange,color}) => { 
   return (   
     <ScrollView  keyboardShouldPersistTaps="handled">  
-    {productItems.map((item, index) => (
+    {productItems.map((item, index) => ( 
       <View key={index}>
       <Text style={styles.label}>Product Item {index+1}</Text>
         <TouchableOpacity>
@@ -73,4 +73,4 @@ const ProductSelectComponent = ({productItems,onSubmit,handleProductItemChange,c
   )
 }
 
-export default React.memo(ProductSelectComponent);
+export default React.memo(ProductSelectComponent); 

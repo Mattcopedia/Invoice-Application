@@ -1,5 +1,5 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import firestore from '@react-native-firebase/firestore';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 
 export const fetchRefurbishSummary = createAsyncThunk("RefurbishSummary/fetchRefurbishSummary",
     async (userId) => {
@@ -19,7 +19,6 @@ export const fetchRefurbishSummary = createAsyncThunk("RefurbishSummary/fetchRef
             });
       
             const sortedrefurbishSummary = newRefurbishSummary
-            console.log(`sortedrefurbishSummary4`,sortedrefurbishSummary)
              return sortedrefurbishSummary[0];  
           } catch (error) {
             console.error('Error fetching data:', error);

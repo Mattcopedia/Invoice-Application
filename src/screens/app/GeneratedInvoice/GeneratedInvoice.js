@@ -1,26 +1,21 @@
-import React,{useState, useEffect, useCallback} from 'react'
-import {SafeAreaView, ImageBackground, FlatList,ScrollView, Modal, RefreshControl} from 'react-native';
-import {  Text} from 'react-native'
-import FileViewer from 'react-native-file-viewer';
-import { Alert } from 'react-native';  
-import { useSelector, useDispatch } from 'react-redux';
-import styles from './styles';
-
-import Header from '../../../components/Header';
-import { convertDate, DuplicateInvoice, formatNumberWithCommas, GenerateInvoiceNo, getName, getWelcomeName, } from '../../../constants/categories';
-import auth from '@react-native-firebase/auth';  
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { setInvoiceList, setToUpdate, setUserName} from '../../../store/invoices'; 
-import { htmlStyles } from '../../../constants/styles'; 
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { fetchGeneratedInvoice } from '../../../store/redux-thunks/GeneratedInvoiceThunk'; 
-import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList';
-import { createPDF2 } from '../../../constants/helperFunctions';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, SafeAreaView, Text } from 'react-native';
+import FileViewer from 'react-native-file-viewer';
+import { useDispatch, useSelector } from 'react-redux';
+import Header from '../../../components/Header';
 import InvoicePdf from '../../../components/InvoicePdf';
+import { convertDate, DuplicateInvoice, formatNumberWithCommas, getName, getWelcomeName, } from '../../../constants/categories';
+import { createPDF2 } from '../../../constants/helperFunctions';
+import { htmlStyles } from '../../../constants/styles';
+import { setInvoiceList, setUserName } from '../../../store/invoices';
+import styles from './styles';
  
   
-const GeneratedInvoice = ({ route }) => {  
-const navigation = useNavigation()
+const GeneratedInvoice = () => {  
+const navigation = useNavigation() 
   const dispatch = useDispatch(); 
   const isFocused = useIsFocused(); 
   const [count,setCount] = useState(1) 
@@ -71,7 +66,7 @@ return () => unsubscribe();
 
   useEffect(() => {
     if (isFocused) {
-      fetchData()
+      fetchData() 
     } 
 }, [isFocused,user, invoiceList, invoiceList?.uid,invoiceList?.Paid, invoiceList?.invoiceType]); 
 
@@ -407,7 +402,6 @@ const handleDelete = async () => {
   .delete() 
   .then(() => {  
       console.log("Invoice Deleted!")
-      dispatch(setToUpdate()); 
       navigation.navigate("GeneratedInvoiceList") 
   }); 
     

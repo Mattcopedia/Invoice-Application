@@ -22,14 +22,15 @@ import Input from '../Input';
 import colors from '../../constants/colors';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import SelectedProducts from '../../components/SelectedProducts/index' 
+import ViewList from '../FlatList/ViewList';
 
 
-const SelectView = ({filterselectedProducts,productItems,setModalVisible,modalVisible,HandleUploadImage,transferred,
+const SelectView = ({productItems,setModalVisible,modalVisible,HandleUploadImage,transferred,
   takePhotoFromCamera,choosePhotoFromLibrary,handleProductItemChange,deleteProductItem,onSubmit,loading,addProductItem,setProductItems,handleProductItemChange2,productItems2}) => { 
    
     const navigation = useNavigation();
     const [refreshKey, setRefreshKey] = useState(0);
-
+ 
  
    useFocusEffect(
      useCallback(() => {
@@ -41,15 +42,14 @@ const SelectView = ({filterselectedProducts,productItems,setModalVisible,modalVi
   return (     
     <> 
      <FlatList  
-     data={filterselectedProducts.length !== 0 ? filterselectedProducts : [] }   
+     data={productItems2.length !== 0 ? productItems2 : [] }   
      keyExtractor={(item, index) => index.toString()}  
      key={`${refreshKey}`}   
      keyboardShouldPersistTaps="handled"  
 
      renderItem={({ item, index }) => ( 
-       <SelectedProducts productItems={productItems2} color={false} onSubmit={onSubmit} handleProductItemChange={handleProductItemChange2}  /> 
-     
-      )} 
+      <ViewList handleProductItemChange={handleProductItemChange2} item={item} index={index}  />   
+      )}   
 
       ListHeaderComponent={ 
         <> 

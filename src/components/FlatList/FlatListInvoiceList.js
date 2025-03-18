@@ -13,8 +13,8 @@ const FlatListProduct = ({filteredAllInvoices}) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleNavigateInvoice = (item) => { 
-    navigation.navigate('GeneratedInvoice')
     dispatch(setInvoiceList(item));    
+    navigation.navigate('GeneratedInvoice') 
   }
 
   const onRefresh = useCallback(async () => {
@@ -32,6 +32,7 @@ const FlatListProduct = ({filteredAllInvoices}) => {
     }
     keyExtractor={(item, index) => index.toString()}
     renderItem={({ item, index }) => (
+      
         <Pressable onPress={() => handleNavigateInvoice(item)} style={styles.containerFlex}>
      <Text style={styles.num}>{index+1}</Text> 
             <View style={styles.item}>
@@ -48,9 +49,10 @@ const FlatListProduct = ({filteredAllInvoices}) => {
 
     ListHeaderComponent={ 
       <>
-                  {!filteredAllInvoices || filteredAllInvoices.length === 0 && (
+                  {!filteredAllInvoices || filteredAllInvoices.length === 0 && ( 
                           <Text style={styles.text2}>Create an Invoice</Text> 
                       )}  
+
       </>
     }
      

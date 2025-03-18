@@ -286,6 +286,16 @@ const styles = StyleSheet.create({
       height: 200, 
       marginTop: 15
     }, 
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 10,
+        backgroundColor: colors.lightGrey,
+        marginLeft: 20,
+        marginRight: 8 ,
+      }, 
+      eyeIcon: {
+      },
 });
 
 export default styles;

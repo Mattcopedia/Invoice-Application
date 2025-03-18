@@ -221,7 +221,7 @@ const products = invoiceDoc.data().Product;
       return !(
         product.Address === item.Address && 
         product.Amount === item.Amount && 
-        product.Attention === item.Attention &&
+        product.Attention === item.Attention && 
         product.Companyname === item.Companyname &&
         product.Description === item.Description &&
         product.ImageUri === item.ImageUri &&

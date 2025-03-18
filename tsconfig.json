@@ -1,3 +1,18 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json"
 }
+ 
+// {
+//   "compilerOptions": {
+//     "baseUrl": ".",
+//     "paths": {
+//       "*": ["src/*"],
+//       "components/*": ["src/components/*"],  // Specific mapping for components
+//       "@src/*": ["src/*"],
+//       "constants/*": ["src/constants/*"],  // Specific mapping for constants  
+//     }
+//   },
+//   "exclude": ["node_modules"],
+//   "extends": "@tsconfig/react-native/tsconfig.json"
+
+// }

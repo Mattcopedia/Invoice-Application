@@ -1,34 +1,32 @@
 
 
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 
+import firestore from '@react-native-firebase/firestore';
+import { useIsFocused } from '@react-navigation/native';
 import {
   Alert,
   Image,
+  Keyboard,
   Pressable,
   SafeAreaView,
-  Keyboard, 
 } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
-import styles from './styles';
-import { useDispatch, useSelector } from 'react-redux'; 
-import { setSelectedItem, setSelectField, setToUpdate } from '../../../store/invoices';
-import colors from '../../../constants/colors';
+import { useDispatch, useSelector } from 'react-redux';
+import SelectView from '../../../components/SelectedProducts/SelectView';
 import Title from '../../../components/Title';
+import { choosePhotoFromLibrary, requestPermissions, takePhotoFromCamera, uploadImage } from '../../../constants/categories';
+import { AmountCalculator } from '../../../constants/helperFunctions';
+import { setToUpdate } from '../../../store/invoices';
+import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
-import { choosePhotoFromLibrary, requestPermissions, takePhotoFromCamera, uploadImage } from '../../../constants/categories';
-import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
-import SelectView from '../../../components/SelectedProducts/SelectView';
 import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
-import { useIsFocused } from '@react-navigation/native';
-import { AmountCalculator } from '../../../constants/helperFunctions';
+import styles from './styles';
 
 const AddProduct = ({ navigation }) => { 
   const imagePath = "https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg"
   const dispatch = useDispatch(); 
-  const invoices = useSelector(state => state?.invoices?.invoiceLatest)  
+  const invoices = useSelector(state => state?.invoices?.invoiceLatest)    
   const selectedItem  = useSelector(state => state?.invoices?.selectField);  
   const invoice  = useSelector(state => state?.invoices?.invoiceLatest);   
   const filterselectedProducts =  selectedItem 
@@ -46,12 +44,13 @@ const AddProduct = ({ navigation }) => {
 
   console.log(`invoiceNo`,invoice.invoiceNo)  
   console.log(`filterselectedProducts`,filterselectedProducts) 
-  console.log(`selectedItem`,selectedItem)     
+  console.log(`selectedItem`,selectedItem)      
+  console.log(`productItems2`,productItems2)   
+
  
    useEffect(() => {
       setProductItems2(filterselectedProducts);  
-      console.log(`filterselectedProducts`,filterselectedProducts) 
-    }, []);  
+    }, [filterselectedProducts]);  
 
   useEffect(() => { 
   dispatch(fetchInvoiceData(user?.uid));
@@ -66,7 +65,7 @@ const AddProduct = ({ navigation }) => {
        useEffect(() => {
         AmountCalculator(productItems,setProductItems) 
          AmountCalculator(productItems2,setProductItems2) 
-        },[productItems2,productItems]);  
+        },[productItems2,productItems]);   
  
    // Function to handle changes in product item fields 
    const handleProductItemChange = (index, field, value) => {
@@ -146,7 +145,23 @@ const AddProduct = ({ navigation }) => {
 
       const filteredItems = productItems.filter(item => item.ImageUri !== imagePath);
 
+     
+
       await Promise.all(filteredItems.map(async (item) => { 
+        
+        const querySnapshot = await firestore()
+        .collection('ProductInvoice')
+        .where('Description', '==', item.Description)
+        .where('SampleCode', '==', item.SampleCode)
+        .where('invoiceNo', '==', invoice?.invoiceNo)
+        .where('userId', '==', user?.uid)
+        .get();
+       
+        if (!querySnapshot.empty) {
+          console.log(`Skipping duplicate product: ${item.Description} - ${item.SampleCode}`);
+          return; // Skip adding duplicate product  
+        }
+
         await firestore().collection('ProductInvoice').add({
           ...item,  
           completeDescription: `${item?.Description} - ${item?.SampleCode}`,
@@ -155,9 +170,7 @@ const AddProduct = ({ navigation }) => {
           checked: false, 
           userId: user?.uid,    
         });  
-      }));  
-
-      await Promise.all(filteredItems.map(async (item) => {  
+    
         await firestore().collection('ProductItem').add({
           ...item,  
           completeDescription: `${item?.Description} - ${item?.SampleCode}`,
@@ -166,9 +179,25 @@ const AddProduct = ({ navigation }) => {
           checked: false, 
           userId: user?.uid,      
         }); 
-      })); 
-   
+
+      }));  
+
+
       await Promise.all(productItems2.map(async (item) => { 
+
+        const querySnapshot = await firestore()
+        .collection('SelectedItem')
+        .where('Description', '==', item.Description)
+        .where('SampleCode', '==', item.SampleCode)
+        .where('invoiceNo', '==', invoice?.invoiceNo)
+        .where('userId', '==', user?.uid)
+        .get();
+      
+        if (!querySnapshot.empty) {
+          console.log(`Skipping duplicate product: ${item.Description} - ${item.SampleCode}`);
+          return; // Skip adding duplicate product 
+        }
+
         await firestore().collection('SelectedItem').add({
             Description:item?.Description,
             completeDescription: item?.completeDescription,
@@ -193,9 +222,7 @@ const AddProduct = ({ navigation }) => {
       } 
       dispatch(fetchProductItem(user?.uid))  
       dispatch(fetchProductSelect(user?.uid))  
-      dispatch(fetchInvoiceData(user?.uid))
-      // dispatch(setSelectedItem([])) 
-      dispatch(setSelectField([]))  
+      dispatch(fetchInvoiceData(user?.uid)) 
       Keyboard.dismiss();
     } catch (error) { 
       console.log('Error when adding product items:', error.message);
@@ -225,7 +252,7 @@ const AddProduct = ({ navigation }) => {
         loading={loading} HandleUploadImage={HandleUploadImage} transferred={transferred} setProductItems={setProductItems}
          handleProductItemChange2={handleProductItemChange2} productItems2={productItems2}
         />       
-         
+          
     </SafeAreaView>  
   ); 
 

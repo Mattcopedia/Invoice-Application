@@ -161,7 +161,7 @@ const AmountInWords = numberToWords(GrandTotal)
     if(invoiceType !== "TECHNICAL PROPOSAL") {
         
       if ( !selectedPaymentPlan || !Transportation || !DeliveryPeriod  || selectedPaymentPlan?.trim() === '' || 
-        Transportation?.trim() === '' || DeliveryPeriod?.trim() === '' || !Validity ||  Validity.trim() === '' ||
+        Transportation?.trim() === '' || DeliveryPeriod?.trim() === '' || !Validity ||  Validity?.trim() === '' ||
          !Address ||!Attention ||Attention?.trim() === "" || Address?.trim() === "") {
 
           SetErrorLoading(true);
@@ -178,39 +178,56 @@ const AmountInWords = numberToWords(GrandTotal)
     }
  
     }
-
+  
 
 
     SetErrorLoading(true)
     setLoading(true);
 
-    firestore()
-    .collection('GeneratedRefurbishInvoice')  
-    .doc(invoiceList?.uid)  
-    .update({  
-      Discount: Discount,
-      Installation: Installation,
-      Transportation: Transportation, 
-      selectedPaymentPlan:selectedPaymentPlan,
-      DeliveryPeriod:DeliveryPeriod,
-      Validity:Validity,
-      selectedVAT: selectedVAT, 
+    let updateInvoice = {}
+
+    if(invoiceList?.invoiceType === "TECHNICAL PROPOSAL" ) {
+     updateInvoice = {
       phoneNumber:phoneNumber, 
       Email:Email,   
-      Note: Note,
       CompanyName:Companyname, 
       Address:Address,  
       Attention: Attention,
       invoiceType: invoiceType,
-      Date:invoiceDate,
-      subTotal:subTotal,
-      sumTotal:sumTotal,
-      Vat:Vat,
-      discountValue:discount,
-      AmountInWords:AmountInWords,  
-      GrandTotal:GrandTotal,
+      Date:invoiceDate, 
       Paid: Paid
-    })  
+     } 
+    } else {
+      updateInvoice = {
+        Discount: Discount,
+        Installation: Installation,
+        Transportation: Transportation, 
+        selectedPaymentPlan:selectedPaymentPlan,
+        DeliveryPeriod:DeliveryPeriod,
+        Validity:Validity,
+        selectedVAT: selectedVAT, 
+        phoneNumber:phoneNumber, 
+        Email:Email,   
+        Note: Note,
+        CompanyName:Companyname, 
+        Address:Address,  
+        Attention: Attention,
+        invoiceType: invoiceType,
+        Date:invoiceDate,
+        subTotal:subTotal,
+        sumTotal:sumTotal,
+        Vat:Vat,
+        discountValue:discount,
+        AmountInWords:AmountInWords,  
+        GrandTotal:GrandTotal,
+        Paid: Paid
+      }
+    } 
+
+    firestore()
+    .collection('GeneratedRefurbishInvoice')  
+    .doc(invoiceList?.uid)  
+    .update(updateInvoice)  
       .then(() => {  
         dispatch(setToUpdate()); 
         Alert.alert('Data updated successfully'); 
@@ -355,7 +372,7 @@ const AmountInWords = numberToWords(GrandTotal)
           placeholder="5 Days"  
           keyboardType="numeric"
         />
-     {(Validity.trim() === ''  || !Validity) && errorLoading  ? <Text style={styles.errorText}>Validity of Quote is required</Text> : null}  
+     {(Validity?.trim() === ''  || !Validity) && errorLoading  ? <Text style={styles.errorText}>Validity of Quote is required</Text> : null}  
         
 
 

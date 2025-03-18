@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 import colors from '../../../constants/colors';
 
 import { Dimensions } from 'react-native';
@@ -12,6 +12,12 @@ const styles = StyleSheet.create({
     padding: 15, // Adjust padding as needed
     marginBottom: 20,
   },
+  container2: {
+    flex: 1,
+    padding: 10, // Adjust padding as needed
+    marginBottom: 10,
+  },
+
   containerProduct: {
     flex: 1,
     padding: 15, // Adjust padding as needed
@@ -229,7 +235,17 @@ checkbox: {
   flexDirection: 'row',
   justifyContent: 'space-around',
   alignItems: 'center',
-}
-}); 
+},
+passwordContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderRadius: 10,
+  backgroundColor: colors.lightGrey,
+  marginLeft: 20,
+  marginRight: 8 ,
+}, 
+eyeIcon: {
+},
+});  
 
 export default styles;

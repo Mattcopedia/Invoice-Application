@@ -9,7 +9,7 @@ const PasswordInput = ({showText,...props}) => {
       placeholderTextColor={colors.midGrey} 
       style={[styles.passwordInput, showText ?  styles.showText : {}]}
       {...props} 
-    />  
+    />    
   );
 };
 

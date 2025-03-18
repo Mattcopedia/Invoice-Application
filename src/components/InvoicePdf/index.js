@@ -5,8 +5,8 @@ import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 import InvoiceText from '../invoiceText/invoiceText'; 
 import Button from '../Button';
-import moment from 'moment'; 
-
+import moment from 'moment';  
+ 
 
 
 const InvoicePdf = ({invoiceList,item2, DuplicateInvoice2,handleNavigateEditInvoice,generatePDF,handleDelete,

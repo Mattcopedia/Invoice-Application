@@ -1,26 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import styles from '../AddTask/styles'
-import { RefreshControl, SafeAreaView,ScrollView,Text,View} from 'react-native'
+import { RefreshControl, SafeAreaView, ScrollView, View } from 'react-native'
 import Header from '../../../components/Header'
 import PlusIcon from '../../../components/PlusIcon'
 import { setSubTotal } from '../../../store/invoices'
+import styles from '../AddTask/styles'
+
+import auth from '@react-native-firebase/auth'
+import { useIsFocused } from '@react-navigation/native'
+
 
 import { useDispatch, useSelector } from 'react-redux'
-import { useIsFocused } from '@react-navigation/native'
-import auth from '@react-native-firebase/auth';
-import { setUserName } from '../../../store/invoices'
+import CarouselSlider from '../../../components/CarouselSlider/index'
 import InvoiceText from '../../../components/invoiceText/invoiceText'
-import {getWelcomeName } from '../../../constants/categories'
-import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk'
 import StatusCard from '../../../components/StatusCard'
-import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList'
-import { fetchReceipt } from '../../../store/redux-thunks/ReceiptThunk'
+import { getWelcomeName } from '../../../constants/categories'
+import { setUserName } from '../../../store/invoices'
 import { fetchGeneratedInvoice } from '../../../store/redux-thunks/GeneratedInvoiceThunk'
-import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk'
 import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk'
-import { fetchSummaryData } from '../../../store/redux-thunks/SummaryThunk'
-import { fetchRefurbishSummary } from '../../../store/redux-thunks/RefurbishSummaryThunk'
 import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceThunk'
+import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk'
+import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk'
+import { fetchReceipt } from '../../../store/redux-thunks/ReceiptThunk'
+import { fetchGeneratedRefurbishInvoice } from '../../../store/redux-thunks/RefurbishList'
+import { fetchRefurbishSummary } from '../../../store/redux-thunks/RefurbishSummaryThunk'
+import { fetchSummaryData } from '../../../store/redux-thunks/SummaryThunk'
 
 
  const HomePage = () => {
@@ -45,7 +48,7 @@ import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceT
 
     const onRefresh = useCallback(async () => {
       setRefreshing(true);
-      dispatch(fetchGeneratedRefurbishInvoice(user?.uid))
+      dispatch(fetchGeneratedRefurbishInvoice(user?.uid)) 
       dispatch(fetchReceipt(user?.uid)) 
       dispatch(fetchGeneratedInvoice(user?.uid))   
       dispatch(fetchProductItem(user?.uid))  
@@ -84,7 +87,7 @@ import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceT
             unsubscribe()   
           calculateTotalAmount(allProduct);
 
-      }, [user, dispatch, isFocused]);
+      }, [user, isFocused]);
 
 
      
@@ -92,7 +95,7 @@ import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceT
     return (
 
         <SafeAreaView style={styles.container}>
-        <Header title="Invoice" />  
+        <Header title="Invoice" />   
     <ScrollView
      refreshControl={
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -114,7 +117,11 @@ import { fetchproductInvoice } from '../../../store/redux-thunks/ProductInvoiceT
          </View>
     
         </ScrollView>
+
+ <CarouselSlider InvoiceList1 = {InvoiceList} RefurbishInvoiceList1={RefurbishInvoiceList} receiptList1={receipt}/>
+
         <PlusIcon/>  
+
          
         </SafeAreaView>  
       )  

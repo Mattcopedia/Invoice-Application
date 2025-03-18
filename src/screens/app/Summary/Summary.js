@@ -219,10 +219,10 @@ const Summary = ({ navigation }) => {
           value={Installation}
           onChangeText={setInstallation}
           outlined
-          placeholder={installation}
+          placeholder={installation} 
           keyboardType="numeric" 
         />
- 
+  
 
 <Text style={styles.label}>Validity of Quote</Text> 
         <Input

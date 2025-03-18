@@ -8,6 +8,15 @@ const styles = StyleSheet.create({
         marginVertical: 7
 
     },
+    containerFlex3: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        marginVertical: 10,
+        marginHorizontal: 17,
+        
+    },
     image: {
         height: 85,
         width: 85,

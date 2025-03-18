@@ -19,7 +19,11 @@ export const invoicesSlice = createSlice({
     toUpdate: null,
     InvoiceCreated: false,
     subTotal: "",
-    allProduct: [],
+
+    allProduct: [], 
+    allProductLoading: false,  
+    allProductError: false, 
+
     GoogleUser: "",
     images:"",
     ProductItem: [],
@@ -29,17 +33,29 @@ export const invoicesSlice = createSlice({
     selectedItem: [], 
     addProduct:[],
     filteredSelectedItem: [],
-    GeneratedInvoice:[],
+
+    GeneratedInvoice:[], 
+    GeneratedInvoiceLoading: false,
+    GeneratedInvoiceError: null,
+    
     InvoiceList:[], 
     RefurbishInvoiceList: [],
     specificInvoice: "",
     productSelect: [], 
     receipt:[], 
+
     receiptStore: [], 
+    receiptStoreLoading: false,
+    receiptStore: null, 
+
     checkBoxSelectedItems: [],
     refurbish:[],
     refurbishSummary: [],
+
     GeneratedRefurbishInvoiceList: [],
+    GeneratedRefurbishInvoiceListLoading: false,
+    GeneratedRefurbishInvoiceListError: null,
+
     receiptList: [], 
     duplicateInvoiceList:[],
     invoiceLatest: [],
@@ -50,9 +66,21 @@ export const invoicesSlice = createSlice({
 
 
   extraReducers: (builder) => {
-    builder.addCase(fetchProductItem.fulfilled,(state,action) => {
-      state.allProduct = action.payload //no filter
-    }) 
+   
+    builder.addCase(fetchProductItem.pending, (state) => {
+      state.allProductLoading = true;  
+      state.allProductError = null; 
+    })
+    .addCase(fetchProductItem.fulfilled,(state,action) => {
+      state.allProductLoading = false;  
+      state.allProduct = action.payload     
+    })
+    .addCase(fetchProductItem.rejected,(state,action) => {
+      state.allProductLoading = false;  
+      state.allProductError = action.payload;    
+    })
+
+
     builder.addCase(fetchInvoiceData.fulfilled,(state,action) => {
       state.data = action.payload
     })  
@@ -65,24 +93,62 @@ export const invoicesSlice = createSlice({
     builder.addCase(fetchSummaryData.fulfilled,(state,action) => {
       state.summary = action.payload
     }) 
-    builder.addCase(fetchGeneratedInvoice.fulfilled,(state,action) => {
+
+    builder.addCase(fetchGeneratedInvoice.pending, (state) => {
+      state.GeneratedInvoiceLoading = true; 
+      state.GeneratedInvoiceError = null;
+    })
+    .addCase(fetchGeneratedInvoice.fulfilled,(state,action) => {
+      state.GeneratedInvoiceLoading = false;
       state.GeneratedInvoice = action.payload  
-    }) 
+    })
+    .addCase(fetchGeneratedInvoice.rejected, (state, action) => {
+      state.GeneratedInvoiceLoading = false;  
+      state.GeneratedInvoiceError = action.payload;  
+    });
+    
     builder.addCase(fetchProductSelect.fulfilled,(state,action) => {
       state.productSelect = action.payload  
     }) 
-    builder.addCase(fetchReceipt.fulfilled,(state,action) => {
+
+
+
+    builder.addCase(fetchReceipt.pending, (state) => {
+      state.receiptStoreLoading = true;  
+      state.receiptStoreError = null;
+    })
+    .addCase(fetchReceipt.fulfilled,(state,action) => {
+      state.receiptStoreLoading = false;  
       state.receiptStore = action.payload     
     }) 
+    .addCase(fetchReceipt.rejected,(state,action) => {
+      state.receiptStoreLoading = false;  
+      state.receiptStoreError = action.payload;     
+    })
+
+
+
     builder.addCase(fetchRefurbish.fulfilled,(state,action) => {
       state.refurbish = action.payload     
     }) 
     builder.addCase(fetchRefurbishSummary.fulfilled,(state,action) => {
       state.refurbishSummary = action.payload     
     }) 
-    builder.addCase(fetchGeneratedRefurbishInvoice.fulfilled,(state,action) => {
+
+
+    builder.addCase(fetchGeneratedRefurbishInvoice.pending, (state) => {
+      state.GeneratedRefurbishInvoiceListLoading = true;  
+      state.GeneratedRefurbishInvoiceListError = null;
+    })
+    .addCase(fetchGeneratedRefurbishInvoice.fulfilled,(state,action) => {
+      state.GeneratedRefurbishInvoiceListLoading = false;  
       state.GeneratedRefurbishInvoiceList = action.payload     
     }) 
+    .addCase(fetchGeneratedRefurbishInvoice.rejected,(state,action) => {
+      state.GeneratedRefurbishInvoiceListLoading = false;  
+      state.GeneratedRefurbishInvoiceListError = action.payload;     
+    })
+
   },  
   
 

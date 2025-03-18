@@ -168,6 +168,16 @@ labelDiscount: {
   fontWeight: '500',
   marginTop: 12,
 },
+passwordContainer: {
+  flexDirection: 'row',
+  alignItems: 'center', 
+  borderRadius: 10,
+  backgroundColor: colors.lightGrey,
+  marginLeft: 20,
+  marginRight: 8 ,
+}, 
+eyeIcon: {
+},
 }); 
 
 export default styles;

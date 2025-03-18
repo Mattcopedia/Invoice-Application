@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
 import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
-import SelectedProducts from '../../../components/SelectedProducts';
+import ProductSelectComponent from '../../../components/SelectedProducts/index'; 
 import { fetchselectedItem } from '../../../store/redux-thunks/selectedItemThunk';
 
 const ProductSelected = ({ route }) => {
@@ -135,14 +135,14 @@ const ProductSelected = ({ route }) => {
         /> 
       </Pressable> 
       <Title type="thin">Selected Products</Title> 
-             <SelectedProducts color={true} productItems={productItems} onSubmit={onSubmit} handleProductItemChange={handleProductItemChange} loading={loading} /> 
+             <ProductSelectComponent color={true} productItems={productItems} onSubmit={onSubmit} handleProductItemChange={handleProductItemChange} loading={loading} /> 
     </SafeAreaView>
   );
 } 
 
 
 
-
+ 
 
 
 export default React.memo(ProductSelected);

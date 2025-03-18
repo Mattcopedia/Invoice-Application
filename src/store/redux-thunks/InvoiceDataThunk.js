@@ -1,5 +1,5 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import firestore from '@react-native-firebase/firestore';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 
 export const fetchInvoiceData = createAsyncThunk("InvoiceData/fetchInvoiceData",
     async (userId) => {
@@ -18,7 +18,6 @@ export const fetchInvoiceData = createAsyncThunk("InvoiceData/fetchInvoiceData",
             });
                
             const sortedInvoices =  newInvoices.sort((a, b) => b.invoiceDate - a.invoiceDate)
-            console.log(`sortedInvoices3`,sortedInvoices[0])
              return sortedInvoices[0]; 
           } catch (error) {
             console.error('Error fetching data:', error);

@@ -190,15 +190,21 @@ const AmountInWords = numberToWords(GrandTotal)
  
     }
 
+  let updateInvoice = {}
 
-
-    SetErrorLoading(true)
-    setLoading(true);
-
-    firestore()
-    .collection('GeneratedInvoice') 
-    .doc(invoiceList?.uid)  
-    .update({   
+  if(invoiceList?.invoiceType === "TECHNICAL PROPOSAL" ) {
+   updateInvoice = {
+    phoneNumber:phoneNumber,  
+    Email:Email,   
+    CompanyName:Companyname, 
+    Address:Address,  
+    Attention: Attention,
+    invoiceType: invoiceType,
+    Date:invoiceDate,
+    Paid: Paid
+   } 
+  } else {
+    updateInvoice = {
       Discount: Discount,
       Installation: Installation,
       Transportation: Transportation, 
@@ -221,7 +227,16 @@ const AmountInWords = numberToWords(GrandTotal)
       AmountInWords:AmountInWords,  
       GrandTotal:GrandTotal,
       Paid: Paid
-    })  
+    }
+  } 
+
+    SetErrorLoading(true)
+    setLoading(true);
+
+    firestore()
+    .collection('GeneratedInvoice') 
+    .doc(invoiceList?.uid)  
+    .update(updateInvoice)   
       .then(() => {  
         dispatch(setToUpdate()); 
         Alert.alert('Data updated successfully'); 

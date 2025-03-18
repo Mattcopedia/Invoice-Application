@@ -252,7 +252,17 @@ strokeWidthButton: {
 functionButton: {
   marginHorizontal: 2.5, marginVertical: 1, height: 30, width: 60,
   backgroundColor: '#39579A', justifyContent: 'center', alignItems: 'center', borderRadius: 5,
-} 
+},
+passwordContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderRadius: 10,
+  backgroundColor: colors.lightGrey,
+  marginLeft: 20,
+  marginRight: 8 ,
+}, 
+eyeIcon: {
+}
 }); 
 
 export default styles;

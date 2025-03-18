@@ -1,5 +1,7 @@
-import moment from 'moment';
-import React, { useEffect, useState} from 'react';
+import firestore from '@react-native-firebase/firestore';
+import { Picker } from '@react-native-picker/picker';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,42 +12,36 @@ import {
   Platform,
   Pressable,
   SafeAreaView,
-  ScrollView,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View, 
+  View
 } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
-import { Picker } from '@react-native-picker/picker';  
-import Button from '../../../components/Button'; 
+import { useDispatch, useSelector } from 'react-redux';
+import Button from '../../../components/Button';
 import DateInput from '../../../components/DateInput';
 import Input from '../../../components/Input';
-import styles from './styles';
-import { useDispatch, useSelector } from 'react-redux'; 
-import { setCheckBoxSelectedItem, setInvoiceLatest, setSelectedItem, setSelectField, setToUpdate } from '../../../store/invoices';
 import Title from '../../../components/Title';
-import { setinvoiceCreated } from '../../../store/invoices';
-import colors from '../../../constants/colors';
 import { GenerateInvoiceNo } from '../../../constants/categories';
-import { useIsFocused } from '@react-navigation/native';
+import colors from '../../../constants/colors';
+import { setCheckBoxSelectedItem, setinvoiceCreated, setInvoiceLatest, setSelectedItem, setSelectField, setToUpdate } from '../../../store/invoices';
+import styles from './styles';
 
 import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 
-const imagePath = "https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg"
+export const imagePath = "https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg"
 
-export const items = [ 
-  { id: '1', label: 'Mat/Velvet Fabric',  Description: '', Quantity: "1", UnitPrice: '', Amount: '', ImageUri:"https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg" , Warranty:'NO WARRANTY', uploaded:false, uploading: false },
-  { id: '2', label: 'Suede Fabric', Description: '', Quantity: "1", UnitPrice: '', Amount: '',ImageUri:"https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg", Warranty:'NO WARRANTY',uploaded:false, uploading: false },
-  { id: '3', label: 'Synthetic Leather',  Description: '', Quantity:"1", UnitPrice: '', Amount: '', ImageUri:"https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg", Warranty:'NO WARRANTY',uploaded:false, uploading: false },
-  { id: '4', label: 'Semi Animal Skin Leather',  Description: '', Quantity: "1", UnitPrice: '', Amount: '', ImageUri:"https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg", Warranty:'NO WARRANTY',uploaded:false, uploading: false },
-  { id: '5', label: 'Animal Skin Leather',  Description: '', Quantity: "1", UnitPrice: '', Amount: '',  ImageUri:"https://png.pngtree.com/png-clipart/20200225/original/pngtree-image-upload-icon-photo-upload-icon-png-image_5279796.jpg",  Warranty:'NO WARRANTY', uploaded:false, uploading: false },
- 
+export const items = [   
+  {  id: '1', label: 'Mat/Velvet Fabric',  Description: '', Quantity: "1", UnitPrice: '', Amount: '' , Warranty:'NO WARRANTY'} ,
+  {  id: '2', label: 'Suede Fabric',  Description: '', Quantity: "1", UnitPrice: '', Amount: '' , Warranty:'NO WARRANTY'} ,
+  {  id: '3', label: 'Synthetic Leather',  Description: '', Quantity: "1", UnitPrice: '', Amount: '' , Warranty:'NO WARRANTY'} ,
+  {  id: '4', label: 'Semi Animal Skin Leather',  Description: '', Quantity: "1", UnitPrice: '', Amount: '' , Warranty:'NO WARRANTY'} ,
+  {  id: '5', label: 'Animal Skin Leather',  Description: '', Quantity: "1", UnitPrice: '', Amount: '' , Warranty:'NO WARRANTY'} ,
 ]; 
-
-const labelOrder = ['Mat/Velvet Fabric', 'Suede Fabric', 'Synthetic Leather', 'Semi Animal Skin Leather', 'Animal Skin Leather'];
-
   
+ export const labelOrder = ['Mat/Velvet Fabric', 'Suede Fabric', 'Synthetic Leather', 'Semi Animal Skin Leather', 'Animal Skin Leather'];
+
+    
 const AddTask = ({ navigation }) => {
   const user = useSelector(state => state?.invoices?.user) 
   
@@ -63,28 +59,24 @@ const AddTask = ({ navigation }) => {
   const [invoiceType, setInvoiceType] = useState('QUOTATION');
   const [refurbish, setRefurbish] = useState('NO');
    
-
+  
   useEffect(() => {
     if (isFocused) { 
       dispatch(setCheckBoxSelectedItem([])); 
       dispatch(fetchInvoiceData(user?.uid));  
     }
-}, [isFocused]);
+}, [isFocused]); 
   
-  const handleSelection = (item) => {
-    const updatedSelection = selectedItems.includes(item) 
-      ? selectedItems.filter((id) => id !== item)
-      : [...selectedItems, item]; 
-
-    const newSelection =  updatedSelection.sort((a, b) => {
-        return labelOrder.indexOf(a.label) - labelOrder.indexOf(b.label);
-      });
-
-      console.log(`updatedSelection`,newSelection)
-  
-
-    dispatch(setCheckBoxSelectedItem(updatedSelection));
-  };
+const handleSelection = (item) => {
+  let updatedSelection;
+  if (selectedItems.some(selected => selected.label === item.label)) {
+    updatedSelection = selectedItems.filter(selected => selected.label !== item.label);
+  } else {
+    updatedSelection = [...selectedItems, item];
+  }
+  updatedSelection.sort((a, b) => labelOrder.indexOf(a.label) - labelOrder.indexOf(b.label));
+  dispatch(setCheckBoxSelectedItem(updatedSelection));   
+};
 
   const handleBack = () => {
     navigation.goBack();
@@ -155,7 +147,7 @@ const AddTask = ({ navigation }) => {
         setphoneNumber(phoneNumber)
         setRefurbish(refurbish)
         dispatch(setSelectedItem([]))  
-        dispatch(setSelectField([]))
+        dispatch(setSelectField([])) 
         Alert.alert("Invoice saved successfully");
       })
       .catch(e => { 
@@ -167,7 +159,7 @@ const AddTask = ({ navigation }) => {
   };
   
   
-  return (
+  return ( 
     <SafeAreaView style={styles.container}>
           <KeyboardAvoidingView
            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -185,7 +177,7 @@ const AddTask = ({ navigation }) => {
   
       <FlatList
         data={refurbish.trim() === "YES" ? items : []} // Use the list conditionally
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item?.id}
          keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
           refurbish.trim() === "YES" && (
@@ -205,7 +197,7 @@ const AddTask = ({ navigation }) => {
               <Text style={{ marginRight: 10 }}>
                 {selectedItems?.includes(item) ? '✓' : '◻'}
               </Text>
-              <Text style={styles.textRef}>{item.label}</Text> 
+              <Text style={styles.textRef}>{item.label}</Text>  
             </TouchableOpacity>
           )
         )}

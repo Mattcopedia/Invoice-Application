@@ -206,7 +206,7 @@ const products = invoiceDoc.data().Product;
 
     const updatedProducts = products.filter(product => 
       !product.invoiceDate.isEqual(item.invoiceDate)
-    );
+    ); 
     
     console.log("UpdatedProducts",updatedProducts) 
      

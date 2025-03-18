@@ -6,7 +6,7 @@ body {
   color:#332333;  
   font-weight: 400 !important;  
 }
-
+ 
 .page-content {
   display: block;
   page-break-inside: avoid; /* Prevent breaking inside this container */
@@ -180,7 +180,7 @@ tfoot .total {
 
 .spacerefurb {
     background-color: #bfbfbf;
-   padding: 0.1em; 
+      padding: 0.04em;          
    border: 2px solid black; 
    font-weight: bold;
    text-align: center;
@@ -192,7 +192,7 @@ tfoot .total {
  }
 
  .upSpace {
- height: 73px;
+height: 55px;
  } 
 
 .furniture {
@@ -208,7 +208,8 @@ tfoot .total {
 }
 
 .left {
-  margin-left: 10px;
+  padding-left: 13px;  
+  margin-left: 13px;    
   text-align: left;
 }
 

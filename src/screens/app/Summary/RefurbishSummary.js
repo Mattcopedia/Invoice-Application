@@ -30,7 +30,7 @@ import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
 
 const RefurbishSummary = ({ navigation }) => { 
   const user = useSelector(state => state?.invoices?.user)
-  const refurbishProduct = useSelector(state => state?.invoices?.refurbish);
+  const refurbishProduct = useSelector(state => state?.invoices?.refurbish); 
   const invoice  = useSelector(state => state?.invoices?.invoiceLatest); 
   const dispatch = useDispatch();   
   const isFocused = useIsFocused();
@@ -40,22 +40,24 @@ const RefurbishSummary = ({ navigation }) => {
   const [discountValue, setDiscountValue] = useState("")
   const [selectedPaymentPlan, setSelectedPaymentPlan] = useState('50% UPFRONT PAYMENT AND 50% BALANCE AFTER DELIVERY');
   const [selectedVAT, setSelectedVAT] = useState("Yes")
-  const [invoiceDate, setInvoiceDate] =  useState(new Date()); 
+  const [invoiceDate, setInvoiceDate] =  useState(new Date());  
   const [loading, setLoading] = useState(false);
   const [errorLoading,SetErrorLoading] = useState(false)
   const [DeliveryPeriod,setDeliveryPeriod] = useState("")
   const [Validity,setValidity] = useState("")
   const [Note,setNote] = useState("")
-  const finalProduct = refurbishProduct?.filter(product => product?.invoiceNo === invoice?.invoiceNo)  
+  const finalProduct = refurbishProduct?.filter(product => product?.invoiceNo === invoice?.invoiceNo)
 
- 
+
+
+  
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setLoading(true); 
       try {
         dispatch(fetchRefurbish(user?.uid))   
         dispatch(fetchInvoiceData(user?.uid));  
-      } catch (error) {
+      } catch (error) { 
         console.error('Error fetching data:', error)
         Alert.alert('Error', 'Failed to fetch data. Please try again.') 
       } finally { 
@@ -63,9 +65,12 @@ const RefurbishSummary = ({ navigation }) => {
       }
     }; 
     fetchData()
-    console.log(`invoice`,invoice)
-     console.log("finalProduct",finalProduct)
-  console.log("refurbishProduct",refurbishProduct)  
+
+
+    console.log(`invoice20`,invoice)
+  console.log("finalProduct20",finalProduct)   
+
+
   }, [user, dispatch, isFocused])  
 
   

@@ -1,5 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import colors from '../../constants/colors';
+const {width,height} = Dimensions.get("screen"); 
+
 
 const styles = StyleSheet.create({
   container: {
@@ -11,7 +13,7 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: colors.blue,
     position: 'absolute',
-    bottom: 24,
+    bottom: height * 0, 
     right: 24,
   },
   plus: {

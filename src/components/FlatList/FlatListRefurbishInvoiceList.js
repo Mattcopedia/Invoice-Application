@@ -6,24 +6,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setRefurbishInvoiceList } from '../../store/invoices';
 import { fetchGeneratedRefurbishInvoice } from '../../store/redux-thunks/RefurbishList';
  
-const FlatListRefurbishInvoiceList = ({filteredAllInvoices,mutate}) => { 
+const FlatListRefurbishInvoiceList = ({filteredAllInvoices,newProduct}) => { 
   const navigation = useNavigation();
   const dispatch = useDispatch() 
   const user = useSelector(state => state?.invoices?.user) 
   const [refreshing, setRefreshing] = useState(false);
 
   const handleNavigateInvoice = (item) => {  
+    dispatch(setRefurbishInvoiceList(item));   
     navigation.navigate('GeneratedRefurbishInvoice') 
-    dispatch( setRefurbishInvoiceList(item));  
-
   }
 
   const onRefresh = useCallback(async () => { 
     setRefreshing(true);
     dispatch(fetchGeneratedRefurbishInvoice(user?.uid))  
-    await mutate(); 
-    setRefreshing(false);  
-  }, [mutate]) 
+    setRefreshing(false);   
+  }, []) 
  
   return (
     <FlatList
@@ -33,6 +31,7 @@ const FlatListRefurbishInvoiceList = ({filteredAllInvoices,mutate}) => {
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
     }
     keyExtractor={(item, index) => index.toString()}
+    key={`${newProduct}`}   
     renderItem={({ item, index }) => (
         <Pressable onPress={() => handleNavigateInvoice(item)} style={styles.containerFlex}>
      <Text style={styles.num}>{index+1}</Text>
@@ -61,4 +60,4 @@ const FlatListRefurbishInvoiceList = ({filteredAllInvoices,mutate}) => {
 }; 
 
 export default React.memo(FlatListRefurbishInvoiceList);
- 
+  

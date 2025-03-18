@@ -1,5 +1,5 @@
 import { View, Text, FlatList, SafeAreaView, Pressable, Image, Alert, TouchableOpacity } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import styles from './styles';
 import { useNavigation, useIsFocused } from "@react-navigation/native";
@@ -9,6 +9,10 @@ import Button from '../../../components/Button';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import FlatListSelect from '../../../components/FlatList/FlatListSelect';
 import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
+import SearchInput from '../../../components/SearchInput';
+import MaterialIcon from 'react-native-vector-icons/EvilIcons';  
+import colors from '../../../constants/colors';
+
 
 const SelectProduct = () => { 
     const dispatch = useDispatch(); 
@@ -23,6 +27,7 @@ const SelectProduct = () => {
     const isFocused = useIsFocused();  
     const [filteredAllInvoices, setFilteredAllInvoices] = useState(arrangedProducts);
     const [keyword, setKeyword] = useState("");
+    const searchInputRef = useRef(null);
 
     const handleBack = () => { 
         navigation.goBack(); 
@@ -36,6 +41,12 @@ const SelectProduct = () => {
             setFilteredAllInvoices(arrangedProducts);
         }
     }, [keyword, allProduct]);  
+
+    const focusSearchInput = () => {
+        if (searchInputRef.current) {
+            searchInputRef.current.focus(); 
+        }
+    };
 
     useEffect(() => {   
         if (user && isFocused) { 
@@ -72,12 +83,24 @@ const SelectProduct = () => {
                 />
             </Pressable> 
             <Text style={styles.titleProduct}>Select a product</Text> 
-            <Input
-                value={keyword} 
-                onChangeText={setKeyword}
-                outlined
-                placeholder="Search for Product"
-            /> 
+            <View style={styles.passwordContainer}  >
+                            <TouchableOpacity style={styles.eyeIcon} onPress={focusSearchInput} > 
+                            <MaterialIcon
+                                name={`search`} 
+                                size={35}
+                                color={colors.black}
+                            /> 
+                            </TouchableOpacity>
+                    
+                            <SearchInput 
+                            value={keyword} 
+                            onChangeText={setKeyword} 
+                            placeholder="Search Invoices"
+                            ref={searchInputRef}
+                            focusSearchInput={focusSearchInput}
+                        /> 
+                        </View>
+
             {(!arrangedProducts || arrangedProducts.length === 0) && (
                 <Text style={styles.text2}>No products available</Text>
             )} 

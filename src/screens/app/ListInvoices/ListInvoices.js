@@ -1,72 +1,87 @@
-import { View, Text, FlatList, SafeAreaView, Pressable, Image, ActivityIndicator } from 'react-native';
-import React, { useDeferredValue, useEffect, useState } from 'react';
+import { View, Text, FlatList, SafeAreaView, Pressable, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import Header from '../../../components/Header';
 import { useSelector, useDispatch } from 'react-redux';
-import styles from './styles';
+import styles from '../AddTask/styles';
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import Input from '../../../components/Input';
 import Button from '../../../components/Button';
 import { fetchProductItem } from '../../../store/redux-thunks/ProductItemThunk';
 import FlatListProduct from '../../../components/FlatList/FlatListProduct';
-import { fetchProductSelect } from '../../../store/redux-thunks/ProductSelectThunk';
-import { fetchInvoiceData } from '../../../store/redux-thunks/InvoiceDataThunk';
-import { fetcher } from '../../../store/redux-thunks/ListCode';
-import useSWR from 'swr';
+import colors from '../../../constants/colors'; 
+import MaterialIcon from 'react-native-vector-icons/EvilIcons'; 
+import SearchInput from '../../../components/SearchInput';
 
-const AllInvoices = () => { 
-    const dispatch = useDispatch();
-    const navigation = useNavigation();
-    const user = useSelector(state => state?.invoices?.user)
-    const { data, error, isLoading, mutate } = useSWR(user?.uid , () => fetcher(user?.uid ? user?.uid : null,'GeneratedInvoice'));
 
-    const invoices = useSelector(state => state?.invoices?.invoiceLatest)
-    const allProduct = useSelector(state => state?.invoices?.allProduct); 
-    const arrangedProducts = allProduct
-    const isFocused = useIsFocused();   
-    const [filteredAllInvoices, setFilteredAllInvoices] = useState(arrangedProducts);
-    const [keyword, setKeyword] = useState("");
-    const [loading, setLoading] = useState(false);  
-    const deferredfilteredAllInvoices = useDeferredValue(filteredAllInvoices);
+const AllInvoices = () => {  
+      const dispatch = useDispatch(); 
+      const navigation = useNavigation(); 
+      const isFocused = useIsFocused();
+      const user = useSelector(state => state?.invoices?.user);
+      const newProduct = useSelector(state => state?.invoices?.allProduct);   
+      const loading = useSelector(state => state?.invoices?.allProductLoading);   
+      const [showInitialLoader, setShowInitialLoader] = useState(true);
+      const searchInputRef = useRef(null); 
+      const [keyword, setKeyword] = useState("");  
+    
+        useEffect(() => {
+            if (isFocused && user?.uid) {
+        dispatch(fetchProductItem(user.uid)).finally(() => {
+            setShowInitialLoader(false); 
+          });
 
-    useEffect(() => { 
-        if (keyword.length > 2) {
-            const filteredItems = arrangedProducts.filter(product => product.Description.toLowerCase().includes(keyword.toLowerCase()));
-            setFilteredAllInvoices(filteredItems);
-        } else if (keyword.length < 1) {
-            setFilteredAllInvoices(arrangedProducts);
-        }
-    }, [keyword, allProduct]);  
- 
+            }
+          }, [isFocused, user?.uid, dispatch]);
 
-    useEffect(() => {   
-        setLoading(true) 
-       dispatch(fetchProductItem(user?.uid))  
-       dispatch(fetchProductSelect(user?.uid))  
-       dispatch(fetchInvoiceData(user?.uid)) 
-        setLoading(false)        
-      }, [user, dispatch, isFocused]);   
+          const focusSearchInput = () => {
+            if (searchInputRef.current) {
+                searchInputRef.current.focus(); 
+            }
+        };
+
+      // Use useMemo to filter invoices dynamically
+      const filteredInvoices = useMemo(() => {
+          if (keyword.length > 2) {
+              return newProduct.filter(product =>
+                  product.Description.toLowerCase().includes(keyword.toLowerCase()) 
+              );
+          }
+          return newProduct;
+      }, [newProduct, keyword]);
   
    
     return ( 
-        <SafeAreaView style={{ flex: 1 }}> 
+        <SafeAreaView style={styles.container2}>  
             <Header title="All Products" />
-            <Input
-                value={keyword} 
-                onChangeText={setKeyword}
-                outlined
-                placeholder="Search for Product" 
-            /> 
+
+            <View style={styles.passwordContainer}  >
+                            <TouchableOpacity style={styles.eyeIcon} onPress={focusSearchInput} > 
+                            <MaterialIcon
+                                name={`search`} 
+                                size={35}
+                                color={colors.black}
+                            /> 
+                            </TouchableOpacity>
+                    
+                            <SearchInput  
+                            value={keyword} 
+                            onChangeText={setKeyword} 
+                            placeholder="Search Invoices"
+                            ref={searchInputRef}
+                            focusSearchInput={focusSearchInput}
+                        /> 
+                        </View> 
             
             <View style={{ flex: 1 }}> 
  
-{isLoading ? (
-          <ActivityIndicator />  
-        ) : (
-             
-            <FlatListProduct filteredAllInvoices={deferredfilteredAllInvoices} /> 
-        )}
-              <View>
 
+        {showInitialLoader && loading ? (
+                    <ActivityIndicator size="large" color={colors.blue} style={{ transform: [{ scale: 0.75 }] }} />
+                  ) : (
+                    <FlatListProduct filteredAllInvoices={filteredInvoices} /> 
+                )}  
+
+              <View> 
               <Button style={styles.button} type="blue" onPress={() => navigation.navigate("ProductItem")}>
             <Text>Add Product</Text> 
           </Button>  

@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
         
     },
+ 
     containerShape: {
         flex: 1, // Ensure container takes up available space
         marginBottom: 80
